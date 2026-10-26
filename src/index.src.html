@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SR&amp;ED Claim Builder | Impact Technical Advisors</title>
+<style>
+:root{
+  --navy:#061c3b; --navy2:#0d2c57; --orange:#f26419; --blue:#88b8da; --blue-l:#e8f1f8;
+  --bg:#f4f7fa; --card:#fff; --line:#d9e2ea; --txt:#1b2733; --mut:#5a6b7b;
+  --ok:#1f8a4c; --warn:#b7791f; --bad:#c0392b;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--txt);background:var(--bg)}
+h1,h2,h3,h4{color:var(--navy);line-height:1.2;margin:0 0 .5em}
+h1{font-size:1.7rem} h2{font-size:1.25rem;margin-top:1.6em} h3{font-size:1.05rem;margin-top:1.2em}
+p{margin:.4em 0 .8em}
+a{color:var(--navy2)}
+button{font:inherit;cursor:pointer}
+.top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--orange);display:flex;align-items:center;gap:16px;padding:8px 20px;flex-wrap:wrap}
+.top img{height:44px;display:block}
+.fileBox{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.fileBox input{width:240px;font-weight:600;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.status{font-size:.8rem;color:var(--mut);min-width:110px}
+.status.dirty{color:var(--warn)}
+.btn{border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:7px 12px;font-weight:600}
+.btn:hover{background:var(--blue-l)}
+.btn.pri{background:var(--navy);color:#fff}.btn.pri:hover{background:var(--navy2)}
+.btn.org{background:var(--orange);border-color:var(--orange);color:#fff}.btn.org:hover{filter:brightness(.93)}
+.btn.sm{padding:4px 9px;font-size:.85rem}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.shell{display:grid;grid-template-columns:272px 1fr;gap:0;max-width:1400px;margin:0 auto}
+nav{padding:18px 12px 40px 20px;position:sticky;top:64px;align-self:start;max-height:calc(100vh - 64px);overflow:auto}
+nav .grp{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:16px 6px 6px;font-weight:700}
+nav button{display:flex;width:100%;align-items:center;gap:10px;text-align:left;background:none;border:0;border-radius:8px;padding:8px 10px;color:var(--txt)}
+nav button:hover{background:var(--blue-l)}
+nav button.on{background:var(--navy);color:#fff}
+nav .n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--blue-l);color:var(--navy);font-size:.78rem;font-weight:700;display:grid;place-items:center}
+nav button.on .n{background:var(--orange);color:#fff}
+nav .p{margin-left:auto;font-size:.72rem;color:var(--mut)}
+nav button.on .p{color:#cfe0ef}
+nav .p.done{color:var(--ok);font-weight:700}nav button.on .p.done{color:#9be3b8}
+main{padding:24px 28px 80px;min-width:0}
+.lead{font-size:1.05rem;color:var(--mut);max-width:70ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin:14px 0}
+.card.tint{background:var(--blue-l);border-color:#c8dcec}
+.card.warn{background:#fff7ea;border-color:#f0d8a8}
+.card.bad{background:#fdecea;border-color:#f1b9b2}
+.card.ok{background:#eaf7ef;border-color:#b6e0c6}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 16px}
+.grid .s2{grid-column:span 2}.grid .sall{grid-column:1/-1}
+label.f{display:block;font-weight:600;font-size:.88rem;color:var(--navy)}
+label.f .hint{display:block;font-weight:400;color:var(--mut);font-size:.82rem;margin:1px 0 4px}
+input[type=text],input[type=date],input[type=month],input[type=email],input[type=tel],select,textarea{width:100%;font:inherit;color:var(--txt);border:1px solid #bccbd8;border-radius:8px;padding:8px 10px;background:#fffef3;margin-top:3px}
+textarea{resize:vertical;min-height:84px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);border-color:var(--navy2)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #edf1f5}
+.chk:last-child{border-bottom:0}
+.chk input[type=checkbox]{margin-top:4px;width:18px;height:18px;flex:none;accent-color:var(--orange)}
+.chk .t{font-weight:600}.chk .d{color:var(--mut);font-size:.88rem}
+.chk .loc{margin-top:4px}
+.chk .loc input{padding:5px 8px;font-size:.85rem}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--blue-l);color:var(--navy)}
+pre.tree{background:var(--navy);color:#e8f1f8;padding:14px 16px;border-radius:8px;overflow:auto;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;margin:8px 0}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--blue-l);color:var(--navy);margin-left:6px;vertical-align:middle}
+.pill.ok{background:#d4f0de;color:#146236}.pill.warn{background:#fbe8c5;color:#8a5a0c}.pill.bad{background:#f8d3cf;color:#8f2418}.pill.org{background:#fde0cf;color:#a93f06}
+.rowcard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;background:#fcfdfe;position:relative}
+.rowcard .hd{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-weight:700;color:var(--navy)}
+.rowcard .hd .btn{margin-left:auto}
+.rowcard.flag{border-color:var(--orange);background:#fff6ef}
+.wc{font-size:.8rem;color:var(--mut);text-align:right}
+.wc.over{color:var(--bad);font-weight:700}.wc.near{color:var(--warn);font-weight:700}
+.bar{height:8px;border-radius:99px;background:#dbe6ef;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--orange)}
+.bar.g>i{background:var(--ok)}
+.pbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--navy);color:#fff;padding:10px 14px;border-radius:10px;margin-bottom:16px}
+.pbar select{width:auto;min-width:240px;margin:0;background:#fff}
+.pbar .btn{background:transparent;color:#fff;border-color:#8fb0d1}.pbar .btn:hover{background:var(--navy2)}
+.nav2{display:flex;justify-content:space-between;gap:12px;margin-top:30px;padding-top:16px;border-top:1px solid var(--line)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding:10px 0 10px 44px;border-bottom:1px solid #edf1f5}
+.steps li:before{content:counter(s);position:absolute;left:0;top:10px;width:30px;height:30px;border-radius:50%;background:var(--orange);color:#fff;font-weight:700;display:grid;place-items:center}
+.kv{display:grid;grid-template-columns:160px 1fr;gap:4px 12px;font-size:.92rem}
+.kv b{color:var(--navy)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+.tabs button{border:1px solid var(--line);background:#fff;border-radius:8px 8px 0 0;padding:8px 16px;font-weight:700;color:var(--navy)}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.modal{position:fixed;inset:0;background:rgba(6,28,59,.55);display:grid;place-items:center;z-index:50;padding:16px}
+.modal>div{background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:20px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:99px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+footer{max-width:1400px;margin:0 auto;padding:20px 28px 40px;color:var(--mut);font-size:.82rem;border-top:1px solid var(--line)}
+.small{font-size:.85rem;color:var(--mut)}
+.num{text-align:right}
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start}
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  nav{position:static;max-height:none;display:flex;overflow-x:auto;padding:10px 16px;gap:4px;border-bottom:1px solid var(--line);background:#fff}
+  nav .grp{display:none}
+  nav button{width:auto;white-space:nowrap}
+  nav .p{display:none}
+  main{padding:18px 16px 60px}
+  .fileBox{margin-left:0;width:100%}.fileBox input{flex:1;min-width:150px}
+  .hero{grid-template-columns:1fr}
+  .grid .s2{grid-column:auto}
+  .kv{grid-template-columns:1fr}
+}
+@media print{
+  .top,nav,.nav2,.pbar,.btn,.noprint,footer,.toast{display:none!important}
+  .shell{display:block}body{background:#fff}main{padding:0}.card{break-inside:avoid;border-color:#bbb}
+  textarea,input{border:0!important;background:none!important}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="__LOGO__" alt="Impact Technical Advisors">
+  <div class="fileBox">
+    <input id="fileName" type="text" placeholder="Name your claim file, e.g. Acme Energy FY2026" aria-label="Claim file name">
+    <span id="status" class="status"></span>
+    <button class="btn pri" data-act="save">Save</button>
+    <button class="btn" data-act="open">Open</button>
+    <button class="btn" data-act="download">Download</button>
+    <button class="btn" data-act="new">New</button>
+  </div>
+</header>
+<div class="shell">
+  <nav id="nav" aria-label="Process steps"></nav>
+  <main id="main"></main>
+</div>
+<footer>
+  Impact Technical Advisors &middot; Chris Hamilton &middot; 403-630-1243 &middot; <a href="mailto:Info@ImpactTechnicalAdvisors.com">Info@ImpactTechnicalAdvisors.com</a> &middot; <a href="https://www.ImpactTechnicalAdvisors.com">www.ImpactTechnicalAdvisors.com</a><br>
+  This tool is a documentation and drafting aid, not a CRA form and not tax or legal advice. Final eligibility is determined by the Canada Revenue Agency. Your data stays in this browser unless you download it.
+</footer>
+
+<script>
+/* ====================================================================
+   DATA
+   ==================================================================== */
+const STEPS = [
+  {id:'start',   t:'Start here',          g:''},
+  {id:'company', t:'Company & claim',     g:'Set up once'},
+  {id:'system',  t:'Evidence system',     g:'Set up once'},
+  {id:'coord',   t:'Coordinator',         g:'Set up once'},
+  {id:'project', t:'Project setup',       g:'Each project', proj:1},
+  {id:'evidence',t:'Evidence checklist',  g:'Each project', proj:1},
+  {id:'suppliers',t:'Supplier tech log',  g:'Each project', proj:1},
+  {id:'monthly', t:'Monthly check-ins',   g:'Every month',  proj:1},
+  {id:'yearend', t:'Year-end & costs',    g:'Year end',     proj:1},
+  {id:'t661',    t:'T661 draft',          g:'Year end',     proj:1},
+  {id:'prov',    t:'AB / BC / SK',        g:'Year end',     proj:1},
+  {id:'review',  t:'Review & export',     g:'Year end'}
+];
+
+const SETUP_CHECKS = [
+  ['s_folder','SR&ED folder template copied to the shared drive'],
+  ['s_naming','Naming convention shared with the team'],
+  ['s_codes','Project codes created in accounting, payroll/timesheets, and purchasing'],
+  ['s_ticket','Field ticket form updated with a trial checkbox and project code field'],
+  ['s_email','Shared SR&ED email address created and announced'],
+  ['s_photo','Phone photo upload set up to the SR&ED Photos folder'],
+  ['s_supplog','Supplier Technology Log placed in each project’s 05 Suppliers folder'],
+  ['s_coord','SR&ED Coordinator named and role description reviewed'],
+  ['s_monthly','Monthly check-ins booked as recurring calendar events with each project lead'],
+  ['s_ita','ITA given read access to the SR&ED folder'],
+  ['s_qtr','Quarterly ITA review dates booked']
+];
+
+const TREE = `SR&ED/
+└─ FY2026/
+   ├─ _Year-End/            T661 working files, cost summary, project list
+   └─ P26-01 Project Name/
+      ├─ 01 Project Setup     Setup Sheet, baseline research, team list
+      ├─ 02 Design            CAD, drawings, sketches, revisions
+      ├─ 03 Testing & Trials  Test plans, data, results, lab reports
+      ├─ 04 Field Records     Tagged field tickets, JSAs, MOCs, daily reports
+      ├─ 05 Suppliers         Supplier Tech Log, spec sheets, emails, agreements
+      ├─ 06 Financial         Invoices, BOMs, contractor bills, funding docs
+      ├─ 07 Photos & Video    Prototypes, setups, failures
+      └─ 08 Monthly Logs      Completed Monthly Check-In Logs`;
+
+const CAPTURE = [
+  ['cap_tickets','Field tickets','Add an “Experimental / Trial” checkbox and a project code dropdown to your digital field tickets (Pronto Forms or similar). Route tagged tickets to 04 Field Records, or export them monthly.'],
+  ['cap_email','Email','Create a shared address (e.g. sred@yourcompany.com). Staff CC or forward technical and supplier emails; the Coordinator files them weekly.'],
+  ['cap_photos','Photos','Set up camera upload from phones to a shared SR&ED Photos folder. Include the project code in the caption or file name.'],
+  ['cap_meet','Meetings','Add a standing “SR&ED notes” line to design reviews and ops meetings. Minutes go into the project folder.'],
+  ['cap_supp','Suppliers','Log every new or unproven supplier product in the Supplier Technology Log, and flag any use beyond the supplier’s rated limits.']
+];
+
+const CODES = [
+  ['code_acct','Accounting (QuickBooks, Sage, etc.)','Create a class, job, or project per SR&ED project. Code invoices and materials at entry, not at year end.'],
+  ['code_pay','Payroll and timesheets','Add the code as a selectable job, with a separate code for routine work on the same job.'],
+  ['code_po','Purchasing','Make the project code a required field on POs for prototype and testing purchases.']
+];
+
+const ROLES = [
+  ['SR&ED Coordinator','Owns the folder, runs monthly check-ins, chases missing items, and is the main contact for ITA.'],
+  ['Project leads','Complete the Project Setup Sheet and attend the monthly check-in.'],
+  ['Accounting','Codes labour, materials, and contractor costs to the project as they come in.'],
+  ['Field crews','Tick the trial box on field tickets and take photos. Nothing more.']
+];
+
+const CADENCE = [
+  ['Project start','Copy folder template, create codes, complete the Project Setup Sheet','Coordinator + lead'],
+  ['Weekly','File tagged tickets, photos, and emails into project folders (30 min)','Coordinator'],
+  ['Monthly','15-minute check-in per project; file the completed log','Coordinator + lead'],
+  ['Quarterly','Short review with ITA to catch gaps early','Coordinator + ITA'],
+  ['Year end','Reconcile costs to GL, technical interviews, compile the claim','Coordinator, ITA, accounting']
+];
+
+const RETENTION = [
+  ['ret_6','Keep records at least six years from the end of the tax year they relate to. Never delete old fiscal-year folders.'],
+  ['ret_ita','Give ITA read access to the SR&ED folder, so year end becomes a review instead of a document hunt.'],
+  ['ret_lock','Lock filed years to read-only once the claim is submitted.'],
+  ['ret_dl','Diarize the deadline: claims must be filed within 18 months of fiscal year end, with no extensions.']
+];
+
+const COORD_TASKS = [
+  ['At the start of each project',[
+    'Copy the folder template and name the project folder with its code.',
+    'Request project codes from accounting, payroll/timesheets, and purchasing.',
+    'Sit with the project lead to complete the Project Setup Sheet.',
+    'Book the recurring monthly check-in with the project lead.']],
+  ['Weekly (about 30 minutes)',[
+    'File tagged field tickets, photos, and emails from the shared SR&ED inbox into project folders.',
+    'Rename files to the naming convention where needed.']],
+  ['Monthly',[
+    'Run the 15-minute check-in with each project lead and file the completed log.',
+    'Confirm the supplier question was asked and the Supplier Technology Log is updated.',
+    'Spot-check that timesheets and invoices are coded to the project.']],
+  ['Quarterly',[
+    'Review the folders with ITA to catch gaps while they can still be fixed.',
+    'Flag new projects, customer-funded trials, grants, or supplier development agreements.']],
+  ['At fiscal year end',[
+    'Compile the annual project list and confirm project start and end dates.',
+    'Work with accounting to produce a cost summary by project, reconciled to the GL.',
+    'Schedule technical interviews between ITA and each project lead.',
+    'Track the filing deadline: 18 months after fiscal year end, with no extensions.',
+    'Lock the filed year’s folder to read-only.']]
+];
+
+const EVID = [
+ {sec:1,t:'Project identification',w:'Complete at project kickoff.',items:[
+  ['e1_sum','Project summary','One paragraph on what you’re trying to build, fix, or improve, and why existing tools, methods, or products don’t already do it. This becomes the anchor for everything else in the file.'],
+  ['e1_unc','Technological uncertainty statement','The specific technical question you can’t answer yet using standard industry knowledge. It must be technical (“Can this tool maintain a seal at 150°C and 35 MPa?”), not commercial (“Will customers pay for it?”).'],
+  ['e1_base','Baseline of current practice','What you, your competitors, and your suppliers already knew or had tried before this project: vendor specs, previous designs, industry standards, and patent or literature searches.'],
+  ['e1_hyp','Hypotheses and planned approach','What you believe might solve the problem and how you plan to test it, including what result counts as success or failure.'],
+  ['e1_team','Project owner and team list','Names, roles, and qualifications of everyone doing the technical work. This links people to the project so their time can be claimed.'],
+  ['e1_code','Project code','A unique job or cost code set up in accounting, payroll, and timesheet systems before work begins.']]},
+ {sec:2,t:'Technical evidence',w:'Capture throughout the project, as the work happens.',items:[
+  ['e2_design','Design records','Sketches, CAD models, drawings, and revision histories, all dated. These show how the design evolved as you learned.'],
+  ['e2_plans','Test plans and protocols','Written plans for each shop test or field trial: what’s being tested, under what conditions, and what will be measured.'],
+  ['e2_results','Test and trial results','Raw data, sensor logs, pressure and temperature charts, and photos or video of setups and outcomes.'],
+  ['e2_fail','Failure and iteration records','What didn’t work, your best explanation for why, and what you changed for the next attempt. Failures are often your strongest evidence of genuine uncertainty.'],
+  ['e2_mtg','Meeting notes and technical emails','Design reviews, problem-solving discussions, and decisions to change direction.'],
+  ['e2_field','Field-sourced documents','Field tickets, daily reports, JSAs, MOCs, non-conformance or incident reports, and equipment modification records tied to experimental work.'],
+  ['e2_lab','Lab and third-party test reports','Material testing, fluid analysis, certification testing, or other outside testing done to answer a technical question.'],
+  ['e2_concl','Technical conclusions','A short write-up at the end of each phase or project: what you learned, what advancement was achieved, and what uncertainty remains. Required even if the project failed or was abandoned.']]},
+ {sec:3,t:'Supplier & vendor technology',w:'Buying an innovative product isn’t SR&ED. Adapting, combining, or pushing it beyond what the supplier has validated can be.',items:[
+  ['e3_log','Supplier technology log','A running list of new, unproven, or recently released supplier products used in the project (use the Supplier tech log step).'],
+  ['e3_spec','Supplier specifications and limits','Data sheets, rated operating envelopes, and vendor performance claims for each product.'],
+  ['e3_gap','Gap statement','A short explanation of why the supplier’s product couldn’t simply be used as-is, and what you had to figure out yourself. Without it, CRA may treat the supplier as the innovator.'],
+  ['e3_corr','Supplier correspondence','Emails or call notes where the supplier couldn’t answer a technical question, e.g. “we haven’t tested it in those conditions.”'],
+  ['e3_integ','Integration and modification records','What you changed, combined, or tested beyond the supplier’s intended use. This is usually where your eligible work sits.'],
+  ['e3_dev','Development agreements','If a supplier is doing custom development for you: who is paying, who owns the IP, and whether the work is done on your behalf.'],
+  ['e3_early','Early-adopter or field-trial partner status','Note whether you’re testing a supplier’s product before commercial release, and clarify in writing whose experimental work it is.']]},
+ {sec:4,t:'Labour records',w:'Labour is usually the largest part of a claim.',items:[
+  ['e4_ts','Project-coded timesheets','Hours logged against the SR&ED project code, separating experimental work from routine or commercial work.'],
+  ['e4_emp','Employee list and compensation','Names, roles, salary or wages, and T4 amounts for everyone who worked on the project.'],
+  ['e4_spec','Specified employee identification','Flag anyone who owns 10% or more of the company’s shares, or is related to someone who does. Different rules and caps apply.'],
+  ['e4_crew','Field crew allocation','When experimental work happens during a live job, record which crew hours went to the trial versus the commercial service.']]},
+ {sec:5,t:'Materials & equipment',w:'Only materials used up in the experimental work qualify.',items:[
+  ['e5_inv','Material invoices and receipts','Costs for materials consumed or transformed during development: prototype parts, test fluids, components destroyed in testing.'],
+  ['e5_bom','Bill of materials per prototype','A parts list for each iteration, connecting invoices to specific experimental builds.'],
+  ['e5_disp','Prototype disposition','Record whether each prototype was scrapped, kept, or later sold or put into commercial service. Selling or commercial use can reduce the claim.'],
+  ['e5_eq','Equipment rentals and purchases','Equipment used for the project, with dates and the share of use attributable to SR&ED.']]},
+ {sec:6,t:'Contractors & third parties',w:'Define scope clearly; vague scopes like “engineering services” are hard to defend.',items:[
+  ['e6_con','Subcontractor contracts and invoices','Agreements and billing for machine shops, engineering firms, testing labs, or others, with a clearly defined scope.'],
+  ['e6_al','Arm’s-length status','Note whether each contractor is independent of your company or related to it. Related-party contracts are treated differently.'],
+  ['e6_ip','IP and rights terms','Who owns the results of the contractor’s work. This determines whether you or the contractor can claim the expenditure.']]},
+ {sec:7,t:'Funding & customer arrangements',w:'Funding and customer payments can reduce a claim or change who may claim.',items:[
+  ['e7_gov','Government assistance records','Any grants or funding received for the project (IRAP, Alberta Innovates, ERA, etc.), with amounts and dates. Missing it can trigger a reassessment.'],
+  ['e7_cust','Customer contracts and cost recovery','If a producer paid for the trial, supplied the well or site, or reimbursed costs, keep those agreements.'],
+  ['e7_jda','Partnership or joint development agreements','Agreements with other companies co-developing the technology. These define how costs and claim rights are shared.']]}
+];
+const EVID_ALL = EVID.flatMap(s=>s.items.map(i=>i[0]));
+
+const YEAREND = [
+  ['y_list','Annual project list','All SR&ED projects active during the fiscal year, with start dates, end dates, and status. This forms the structure of your T661 filing.'],
+  ['y_cost','Cost summary by project, reconciled to the GL','Labour, materials, contractor, and overhead totals per project, tied back to your general ledger. Unreconciled numbers are a common audit trigger.'],
+  ['y_corp','Corporate details','Fiscal year end, CCPC status, associated companies, and prior-year SR&ED claims. These determine your credit rates, refundability, and expenditure limits.'],
+  ['y_int','Technical interview','A working session between your ITA SR&ED advisor and the lead technical person on each project. This turns your records into the technical narrative CRA reviews.'],
+  ['y_dead','Filing deadline confirmed','Claims must be filed within 18 months of fiscal year end, with no extensions. Miss it and the credits for that year are lost permanently.']
+];
+
+const CHECKIN_Q = [
+  ['tried','1. What did we try this month?','Tests, trials, design changes, or builds completed.'],
+  ['happened','2. What happened?','Results, good and bad, and where the data is stored.'],
+  ['failed','3. Did anything fail or surprise us?','Unexpected results are prime SR&ED evidence.'],
+  ['supplier','4. Did we use any supplier product in a way, condition, or combination the supplier hasn’t validated?','Name the product and what was beyond its rated use. Update the Supplier Technology Log.'],
+  ['next','5. What are we trying next, and why?','Link this month’s result to next month’s approach.'],
+  ['newcost','6. Any new people, contractors, or significant costs?','Names, vendors, and amounts.'],
+  ['customer','7. Did any work happen on a customer site or during a paying job?','Customer, location, and hours spent on the trial.']
+];
+const CHECKIN_FILED = [
+  ['f_data','Data, logs, and test results saved'],['f_photos','Photos uploaded and dated'],['f_ts','Timesheets coded to the project'],
+  ['f_spec','Supplier specs and correspondence saved'],['f_inv','Material and contractor invoices filed'],['f_log','Supplier Technology Log updated']
+];
+
+const FUND_Q = [
+  ['q_gov','Is any government funding expected (IRAP, Alberta Innovates, ERA, other)?'],
+  ['q_cust','Will any work take place on a customer site or during a paying job?'],
+  ['q_pay','Is a customer paying for, or reimbursing, any trial costs?'],
+  ['q_jda','Is there a partnership or joint development agreement?'],
+  ['q_supp','Is a supplier developing anything custom for this project?']
+];
+
+const SCREEN_Y = ['Developing a new tool, process, or method where the outcome couldn’t be predicted','Adapting technology to conditions where existing methods failed or weren’t proven','Structured field trials with measured results and design changes between runs','Work that produced new technical knowledge, even if the approach was abandoned'];
+const SCREEN_N = ['Ordinary troubleshooting using known fixes','Routine customization or configuration','Trial and error with no records of what was tested or why','Standard maintenance, quality control, or routine data collection'];
+
+const FIELDS_SCI = ['Petroleum / oil and gas engineering','Mechanical engineering','Chemical engineering','Materials / metallurgical engineering','Electrical / instrumentation engineering','Software / data systems','Environmental engineering','Geoscience / reservoir','Other'];
+
+const PROV = {
+ AB:{name:'Alberta',prog:'Innovation Employment Grant (IEG)',
+  rate:'8% on eligible Alberta R&D spending up to the company’s base level; 20% on spending above the base (base = average qualifying Alberta R&D spending over the previous 2 years). Applies to up to $4 million of annual R&D spending. Refundable.',
+  forms:'Alberta Schedule 29 (filed with the AT1) and Form AT4970 (project list). See Information Circular IEG-1.',
+  due:'15 months after the corporation’s filing due date.',
+  link:'Expenditures must match those that qualify federally, be incurred in Alberta, and be incurred after Dec 31, 2020. List the same projects on AT4970 that you describe on the T661; the technical descriptions must be consistent.',
+  assist:'Eligible expenditures are reduced by government and non-government assistance (the IEG itself and the federal ITC excepted). The IEG reduces the federal SR&ED pool and federal qualified expenditures.',
+  checks:[
+   ['ab_pe','Confirm the corporation is a qualified corporation with Alberta R&D activity (check taxable capital and eligibility rules with ITA).'],
+   ['ab_where','Records show the SR&ED work was physically performed in Alberta (site names, shop address, well locations).'],
+   ['ab_base','Prior two years of Alberta qualifying R&D spending gathered to establish the IEG base level.'],
+   ['ab_proj','Project list prepared for Form AT4970 and matched to the T661 projects (titles, codes, dates).'],
+   ['ab_sched','Alberta Schedule 29 prepared with the AT1 return.'],
+   ['ab_alloc','Salary, materials and contractor costs split between Alberta and non-Alberta work where a project spans provinces.'],
+   ['ab_assist','Government and non-government assistance (Alberta Innovates, ERA, IRAP, customer funding) recorded and deducted.'],
+   ['ab_dead','IEG filing deadline diarized (15 months after the filing due date).']],
+  note:'The IEG replaced Alberta’s earlier provincial SR&ED credit, which was cut in 2019. Confirm current program rules and any budget changes with ITA before filing.'},
+ BC:{name:'British Columbia',prog:'BC SR&ED tax credit',
+  rate:'10% of SR&ED qualified BC expenditures. Refundable for CCPCs within the provincial expenditure limit (CRA shows a $300,000 refundable credit based on a $3 million limit); non-refundable otherwise.',
+  forms:'Form T666, British Columbia Scientific Research and Experimental Development Tax Credit (administered by the CRA).',
+  due:'18 months after the corporation’s tax year-end.',
+  link:'BC rules parallel the federal definition of SR&ED, qualifying expenditures and expenditure limit. T666 is filed alongside the T661, so the BC amounts must reconcile to the T661 cost lines.',
+  assist:'Provincial qualified expenditures are reduced by government and non-government assistance, but not by the BC credit. The BC credit reduces the federal pool and federal qualified expenditures. Non-refundable credits carry back 3 years and forward 10 years.',
+  checks:[
+   ['bc_pe','Confirm the corporation has a permanent establishment in British Columbia.'],
+   ['bc_where','Records show the SR&ED work was carried out in BC (site names, shop address, field locations).'],
+   ['bc_alloc','BC portion of salary, materials and contractor costs identified and supported where work spans provinces.'],
+   ['bc_t666','Form T666 prepared and reconciled to T661 cost lines.'],
+   ['bc_limit','Expenditure limit and associated-company allocation confirmed (affects refundable portion).'],
+   ['bc_assist','Government and non-government assistance recorded and deducted from BC qualified expenditures.'],
+   ['bc_dead','BC filing deadline diarized (18 months after year-end).']],
+  note:''},
+ SK:{name:'Saskatchewan',prog:'Saskatchewan Research and Development tax credit',
+  rate:'10% of eligible Saskatchewan expenditures. CCPCs: refundable up to a $1 million annual limit; non-refundable above that. Other corporations: 10% non-refundable.',
+  forms:'Form T2SCH403, Saskatchewan Research and Development Tax Credit (administered by the CRA).',
+  due:'Filed with the T2 return (CRA lists no separate deadline); confirm timing with ITA.',
+  link:'Eligible expenditures are those that qualify for the federal SR&ED ITC and are carried out in Saskatchewan. The T2SCH403 amounts must reconcile to the T661 cost lines.',
+  assist:'Eligible expenditures are reduced by government and non-government assistance, but not by the Saskatchewan credit. The credit reduces the federal pool and federal qualified expenditures. A corporation may renounce all or part of the credit. Non-refundable credits carry back 3 years and forward 10 years.',
+  checks:[
+   ['sk_pe','Confirm the corporation has a permanent establishment in Saskatchewan.'],
+   ['sk_where','Records show the SR&ED work was carried out in Saskatchewan (site names, shop address, field locations).'],
+   ['sk_alloc','Saskatchewan portion of salary, materials and contractor costs identified and supported where work spans provinces.'],
+   ['sk_sch','T2SCH403 prepared and reconciled to T661 cost lines.'],
+   ['sk_renounce','Decision made on renouncing any non-refundable credit (timing matters for federal deductions).'],
+   ['sk_assist','Government and non-government assistance recorded and deducted.']],
+  note:''}
+};
+const PROV_GENERAL = [
+  ['pg_loc','Every project record states the province(s) where each piece of work was performed.'],
+  ['pg_split','A cost split by province exists for each project (use the allocation table on this page).'],
+  ['pg_consistent','Technical descriptions on provincial forms match the T661 text. CRA administers BC and Saskatchewan, and Alberta may cross-check.'],
+  ['pg_assist','Assistance (grants, SR&ED-adjacent funding, customer reimbursement) is recorded once and applied consistently across the federal and provincial claims.']
+];
+
+const T = { // new-row templates
+  hyps:()=>({h:'',t:'',c:''}),
+  team:()=>({name:'',role:'',qual:'',pct:'',salary:'',spec:false}),
+  contractors:()=>({co:'',scope:'',ip:'',al:'',prov:''}),
+  suppliers:()=>({date:today(),supplier:'',contact:'',product:'',isnew:'Yes',limits:'',use:'',beyond:'No',gap:'',corr:'',dev:'No',ipOwner:'',early:'No',notes:''}),
+  checkins:()=>({month:today().slice(0,7),by:'',date:today(),tried:'',happened:'',failed:'',supplier:'',next:'',newcost:'',customer:'',filed:{},lead:''})
+};
+
+/* ====================================================================
+   STATE
+   ==================================================================== */
+const LS_AUTO='ita.sred.autosave', LS_FILE='ita.sred.file.', LS_IDX='ita.sred.index';
+let S, STEP='start', CUR=0, dirty=false, lastSaved=null;
+function today(){return new Date().toISOString().slice(0,10)}
+function uid(){return 'p'+Math.random().toString(36).slice(2,8)}
+function newState(){return {v:1,name:'',created:new Date().toISOString(),updated:'',
+  company:{name:'',bn:'',fye:'',ccpc:'',assoc:'',prior:'',contact:'',prov:{AB:false,BC:false,SK:false},otherProv:''},
+  claim:{method:'proxy',sredEmail:'',folderLoc:''},
+  coord:{name:'',title:'',email:'',phone:'',hours:''},
+  checks:{},notes:{},provChecks:{},projects:[],cur:0,step:'start',
+  done:{naming:''}};}
+function newProject(){
+  const y=(S.company.fye||today()).slice(2,4);
+  const n=String(S.projects.length+1).padStart(2,'0');
+  return {id:uid(),code:`P${y}-${n}`,name:'',fy:(S.company.fye||today()).slice(0,4),start:'',end:'',lead:'',coordinator:S.coord.name||'',
+    fields:{problem:'',summary:'',uncertainty:'',baseline:'',suppliers:'',testing:'',results:'',advancement:''},
+    hyps:[T.hyps()],team:[T.team()],contractors:[],fund:{},fundNotes:'',screen:{},ev:{},checkins:[],suppliers:[],
+    costs:{},prov:{AB:'',BC:'',SK:'',other:''},sites:'',
+    t661:{l206:'',l208:'',l218:'',l242:'',l244:'',l246:'',prepBy:'',l265:'',l266:'',l267:''},setup:{}};
+}
+
+/* path helpers */
+function root(path){ if(path.startsWith('@.')) return [S.projects[CUR], path.slice(2)]; return [S, path]; }
+function getp(path){ const [o,p]=root(path); if(!o) return undefined; return p.split('.').reduce((a,k)=>a==null?a:a[k],o); }
+function setp(path,val){ const [o,p]=root(path); if(!o) return; const ks=p.split('.'); let a=o;
+  for(let i=0;i<ks.length-1;i++){ if(a[ks[i]]==null) a[ks[i]]=/^\d+$/.test(ks[i+1])?[]:{}; a=a[ks[i]]; }
+  a[ks[ks.length-1]]=val; }
+const P=()=>S.projects[CUR];
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const wc=t=>(String(t||'').trim().match(/\S+/g)||[]).length;
+const num=v=>{const n=parseFloat(String(v||'').replace(/[$,\s]/g,''));return isNaN(n)?0:n};
+const money=n=>'$'+n.toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2});
+function addMonths(ds,n){ if(!ds) return null; const d=new Date(ds+'T12:00:00'); const day=d.getDate(); d.setMonth(d.getMonth()+n); if(d.getDate()!==day) d.setDate(0); return d; }
+const fdate=d=>d?d.toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'}):'';
+function monthLabel(m){ if(!m) return ''; const d=new Date(m+'-15T12:00:00'); return d.toLocaleDateString('en-CA',{year:'numeric',month:'long'}); }
+
+/* ====================================================================
+   FORM HELPERS (all inputs bind through data-k)
+   ==================================================================== */
+function F(path,label,o={}){
+  const v=getp(path); const type=o.type||'text'; const cls=o.cls?` class="${o.cls}"`:'';
+  const lab=`<span>${label}</span>${o.hint?`<span class="hint">${o.hint}</span>`:''}`;
+  if(type==='area'){
+    const wid=path.replace(/\W/g,'_');
+    return `<div${cls}><label class="f">${lab}<textarea data-k="${path}" ${o.max?`data-wc="${wid}" data-max="${o.max}"`:''} rows="${o.rows||4}" placeholder="${esc(o.ph||'')}">${esc(v)}</textarea></label>${o.max?`<div class="wc" id="wc_${wid}"></div>`:''}</div>`;
+  }
+  if(type==='select'){
+    return `<div${cls}><label class="f">${lab}<select data-k="${path}"><option value="">Select…</option>${o.opts.map(x=>{const [val,txt]=Array.isArray(x)?x:[x,x];return `<option value="${esc(val)}"${v===val?' selected':''}>${esc(txt)}</option>`}).join('')}</select></label></div>`;
+  }
+  return `<div${cls}><label class="f">${lab}<input type="${type}" data-k="${path}" value="${esc(v)}" placeholder="${esc(o.ph||'')}" ${o.list?`list="${o.list}"`:''} ${type==='text'&&o.money?'inputmode="decimal"':''}></label></div>`;
+}
+function CK(path,title,desc,o={}){
+  const v=!!getp(path);
+  return `<div class="chk"><input type="checkbox" data-k="${path}" ${v?'checked':''} aria-label="${esc(title)}"><div style="flex:1"><div class="t">${title}</div>${desc?`<div class="d">${desc}</div>`:''}${o.loc?`<div class="loc"><input type="text" data-k="${o.loc}" value="${esc(getp(o.loc))}" placeholder="Where is it stored? (folder path / link)"></div>`:''}</div></div>`;
+}
+function YN(path,label){
+  const v=getp(path)||'';
+  return `<tr><td>${label}</td><td style="white-space:nowrap"><label><input type="radio" name="${path}" data-k="${path}" value="Yes" ${v==='Yes'?'checked':''}> Yes</label> &nbsp; <label><input type="radio" name="${path}" data-k="${path}" value="No" ${v==='No'?'checked':''}> No</label></td></tr>`;
+}
+function cards(path,spec,o){ // o: add label, title fn, minimum
+  const arr=getp(path)||[]; const tplName=path.split('.').pop();
+  let h='';
+  arr.forEach((r,i)=>{
+    const ttl=o.title?o.title(r,i):`${o.noun} ${i+1}`;
+    const flag=o.flag&&o.flag(r)?' flag':'';
+    h+=`<div class="rowcard${flag}"><div class="hd"><span>${esc(ttl)}</span>${o.badge&&o.badge(r)?`<span class="pill org">${o.badge(r)}</span>`:''}<button class="btn sm danger" data-act="del" data-path="${path}" data-i="${i}">Remove</button></div><div class="grid">${
+      spec.map(f=>{
+        const p=`${path}.${i}.${f.k}`;
+        const cls=f.span==='all'?'sall':f.span===2?'s2':'';
+        if(f.type==='check') return `<div class="${cls}"><label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-k="${p}" ${r[f.k]?'checked':''}> ${f.label}</label></div>`;
+        return F(p,f.label,{type:f.type||'text',opts:f.opts,hint:f.hint,ph:f.ph,rows:f.rows||3,cls});
+      }).join('')}</div></div>`;
+  });
+  h+=`<button class="btn" data-act="add" data-path="${path}" data-tpl="${tplName}">+ ${o.add}</button>`;
+  return h;
+}
+function nextBtns(){
+  const i=STEPS.findIndex(s=>s.id===STEP);
+  const pr=STEPS[i-1], nx=STEPS[i+1];
+  return `<div class="nav2 noprint">${pr?`<button class="btn" data-act="go" data-to="${pr.id}">← ${pr.t}</button>`:'<span></span>'}${nx?`<button class="btn pri" data-act="go" data-to="${nx.id}">Next: ${nx.t} →</button>`:''}</div>`;
+}
+function projBar(){
+  if(!S.projects.length) return `<div class="card warn"><b>No SR&ED projects yet.</b> Each project gets its own setup sheet, evidence checklist, supplier log, check-ins and T661 text.<br><br><button class="btn org" data-act="addproj">+ Add your first project</button></div>`;
+  return `<div class="pbar noprint"><b>Project:</b><select data-act="pick" aria-label="Choose project">${S.projects.map((p,i)=>`<option value="${i}"${i===CUR?' selected':''}>${esc(p.code)} ${esc(p.name||'(unnamed)')}</option>`).join('')}</select><button class="btn" data-act="addproj">+ New project</button><button class="btn" data-act="delproj">Delete this project</button></div>`;
+}
+
+/* ====================================================================
+   PROGRESS
+   ==================================================================== */
+function projEvidencePct(p){ const d=EVID_ALL.filter(id=>p.ev&&p.ev[id]&&p.ev[id].d).length; return d/EVID_ALL.length; }
+function projSetupPct(p){
+  const f=p.fields; const parts=[p.name,p.start,p.lead,f.summary,f.uncertainty,f.baseline,p.hyps.some(h=>h.h&&h.t&&h.c),p.team.some(t=>t.name&&t.role)];
+  return parts.filter(Boolean).length/parts.length;
+}
+function t661Ready(p){
+  const r=[]; const t=p.t661;
+  const add=(ok,msg,sev)=>r.push({ok,msg,sev:sev||'must'});
+  add(!!p.name,'Project title (line 200)');
+  add(!!p.start,'Start date (line 202)');
+  add(!!p.end,'Completion / expected completion date (line 204)');
+  add(!!t.l206,'Field of science or technology (line 206)');
+  const w2=wc(t.l242),w4=wc(t.l244),w6=wc(t.l246);
+  add(w2>0&&w2<=350,`Line 242 uncertainty text: ${w2} / 350 words`);
+  add(w4>0&&w4<=700,`Line 244 work performed text: ${w4} / 700 words`);
+  add(w6>0&&w6<=350,`Line 246 advancement text: ${w6} / 350 words`);
+  add(!redFlags([t.l242,t.l244,t.l246].join(' ')).length,'No business or commercial language in lines 242–246','should');
+  add(!!t.prepBy,'Who prepared Section B (line 253–261)');
+  add(p.team.some(x=>x.name&&x.qual),'At least one key individual with qualifications (lines 255–261)');
+  add(projEvidencePct(p)>=0.5,`Evidence checklist at least 50% complete (${Math.round(projEvidencePct(p)*100)}%)`,'should');
+  add(num(p.costs.l300)+num(p.costs.l320)+num(p.costs.l340)>0,'Costs entered (Part 3)');
+  add(!!p.fund.q_gov&&!!p.fund.q_pay,'Funding and customer questions answered','should');
+  return r;
+}
+function stepPct(id){
+  const p=P();
+  switch(id){
+    case 'start': return null;
+    case 'company': { const c=S.company; const a=[c.name,c.fye,c.ccpc,c.prov.AB||c.prov.BC||c.prov.SK||c.otherProv]; return a.filter(Boolean).length/a.length; }
+    case 'system': { const ids=[...SETUP_CHECKS.map(x=>x[0]),...CAPTURE.map(x=>x[0]),...CODES.map(x=>x[0]),...RETENTION.map(x=>x[0])]; return ids.filter(i=>S.checks[i]).length/ids.length; }
+    case 'coord': { const a=[S.coord.name,S.coord.email,S.coord.hours,S.checks.coord_ok]; return a.filter(Boolean).length/a.length; }
+    case 'project': return p?projSetupPct(p):null;
+    case 'evidence': return p?projEvidencePct(p):null;
+    case 'suppliers': return p?(p.suppliers.length||p.checks_nosupp?1:0):null;
+    case 'monthly': return p?Math.min(1,p.checkins.length/12):null;
+    case 'yearend': return p?(YEAREND.filter(y=>S.checks[y[0]]).length/YEAREND.length):null;
+    case 't661': { if(!p) return null; const r=t661Ready(p); return r.filter(x=>x.ok).length/r.length; }
+    case 'prov': { const keys=[...PROV_GENERAL.map(x=>x[0])]; ['AB','BC','SK'].forEach(k=>{ if(S.company.prov[k]) PROV[k].checks.forEach(c=>keys.push(c[0])); }); return keys.filter(k=>S.provChecks[k]).length/keys.length; }
+    case 'review': return null;
+  }
+}
+
+/* ====================================================================
+   VIEWS
+   ==================================================================== */
+const V={};
+
+V.start=()=>`
+<div class="hero">
+ <div>
+  <h1>Build your SR&amp;ED evidence system, then your claim.</h1>
+  <p class="lead">The strongest SR&amp;ED claims come from evidence created while the work happens, not rebuilt at year end. This guided process takes the Impact Technical Advisors documentation kit and turns it into twelve steps: set the system up once, capture evidence all year, then draft your T661 and the Alberta, BC and Saskatchewan paperwork from what you recorded.</p>
+  <div class="card tint">
+    <h3 style="margin-top:0">First, name your claim file</h3>
+    <p>Type a name in the box at the top right (for example <i>Acme Energy FY2026</i>) and press <b>Save</b>. Your work also saves automatically in this browser as you go.</p>
+    <p class="small" style="margin-bottom:0">Browser storage can be cleared, so use <b>Download</b> regularly to keep a copy you can re-open later with <b>Open</b>, or send to your ITA advisor.</p>
+  </div>
+  <p><button class="btn org" data-act="go" data-to="company">Begin: Company &amp; claim →</button></p>
+ </div>
+ <div class="card">
+  <h3 style="margin-top:0">How the twelve steps fit together</h3>
+  <ol class="steps">
+   <li><b>Company &amp; claim.</b> Fiscal year end, CCPC status, provinces. Gives you your filing deadlines.</li>
+   <li><b>Evidence system.</b> Folders, naming, project codes, capture, cadence, retention.</li>
+   <li><b>Coordinator.</b> Who owns the routine (2–4 hours a month).</li>
+   <li><b>Project setup.</b> Problem, uncertainty, baseline, hypotheses, team, funding.</li>
+   <li><b>Evidence checklist.</b> What to capture, with where it is stored.</li>
+   <li><b>Supplier tech log.</b> Where the supplier’s knowledge ends and yours begins.</li>
+   <li><b>Monthly check-ins.</b> 15 minutes per project, per month.</li>
+   <li><b>Year-end &amp; costs.</b> Reconcile and summarise the costs.</li>
+   <li><b>T661 draft.</b> Lines 242, 244, 246 and Section C drafted from your records.</li>
+   <li><b>AB / BC / SK.</b> Provincial forms, allocation and documentation.</li>
+   <li><b>Review &amp; export.</b> Gaps, deadlines, Word export, hand-off to ITA.</li>
+  </ol>
+ </div>
+</div>
+<div class="card">
+ <h3 style="margin-top:0">Who does what</h3>
+ <table><tr><th>Role</th><th>Responsibility</th></tr>${ROLES.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td></tr>`).join('')}<tr><td><b>Impact Technical Advisors</b></td><td>Writes the technical narrative and T661 from your evidence, determines eligibility, calculates the credit, and files.</td></tr></table>
+</div>`;
+
+V.company=()=>{
+ const c=S.company;
+ return `<h1>Company &amp; claim</h1>
+ <p class="lead">These details set your deadlines and decide which provincial pages apply. They also feed the corporate details CRA uses for credit rates and refundability.</p>
+ <div class="card"><div class="grid">
+  ${F('company.name','Legal company name')}
+  ${F('company.bn','CRA business number',{ph:'123456789RC0001'})}
+  ${F('company.fye','Fiscal year end for this claim',{type:'date',hint:'The last day of the tax year you are claiming.'})}
+  ${F('company.ccpc','Canadian-controlled private corporation (CCPC)?',{type:'select',opts:['Yes','No','Not sure']})}
+  ${F('company.assoc','Associated companies',{hint:'Names of any associated corporations (they share an expenditure limit).',type:'area',rows:2,cls:'s2'})}
+  ${F('company.prior','Prior-year SR&ED claims',{hint:'Years claimed before, and any carry-forwards.',type:'area',rows:2,cls:'s2'})}
+  ${F('company.contact','Main contact for this claim',{ph:'Name, email, phone',cls:'s2'})}
+ </div></div>
+ <h2>Where is the SR&amp;ED work performed?</h2>
+ <div class="card">
+  ${CK('company.prov.AB','Alberta','Innovation Employment Grant (IEG) pages will be shown.')}
+  ${CK('company.prov.BC','British Columbia','BC SR&ED credit (Form T666) pages will be shown.')}
+  ${CK('company.prov.SK','Saskatchewan','Saskatchewan R&D credit (T2SCH403) pages will be shown.')}
+  <div style="margin-top:8px">${F('company.otherProv','Other provinces or countries',{hint:'Work outside Canada affects the salary you can claim; work in other provinces may have its own credit.'})}</div>
+ </div>
+ <h2>Your deadlines</h2>
+ <div class="card" data-live="deadlines"></div>
+ ${nextBtns()}`;
+};
+LIVE_deadlines=()=>{
+ const fye=S.company.fye; if(!fye) return '<p class="small" style="margin:0">Enter your fiscal year end above to calculate deadlines.</p>';
+ const fed=addMonths(fye,18), ab=addMonths(fye,21), bc=addMonths(fye,18), t2=addMonths(fye,6);
+ const days=Math.ceil((fed-new Date())/86400000);
+ const cls=days<0?'bad':days<90?'warn':'';
+ let h=`<div class="kv"><b>T2 return due</b><span>${fdate(t2)} (6 months after year end)</span><b>Federal T661</b><span><b>${fdate(fed)}</b> &mdash; 18 months after year end, no extensions. ${days<0?`<span class="pill bad">${-days} days past</span>`:`<span class="pill ${days<90?'warn':'ok'}">${days} days left</span>`}</span>`;
+ if(S.company.prov.AB) h+=`<b>Alberta IEG</b><span>about ${fdate(ab)} (15 months after the filing due date; confirm exact date with ITA)</span>`;
+ if(S.company.prov.BC) h+=`<b>BC T666</b><span>${fdate(bc)} (18 months after year end)</span>`;
+ if(S.company.prov.SK) h+=`<b>Saskatchewan T2SCH403</b><span>Filed with the T2 return, by ${fdate(t2)}</span>`;
+ return h+'</div>'+(cls?`<p class="small" style="margin:10px 0 0">${days<0?'This deadline has passed. Contact ITA immediately.':'Under 90 days left. Prioritise year-end steps now.'}</p>`:'');
+};
+
+V.system=()=>{
+ const ex='2026-09-14_P26-01_Seal-failure-at-150C.pdf';
+ return `<h1>Evidence system</h1>
+ <p class="lead">Build the system once. About a day of setup. Use the platform your company already runs on (SharePoint or OneDrive for Microsoft 365, Google Drive for Google Workspace). Adoption matters more than features.</p>
+
+ <h2>1. Set up the evidence folder</h2>
+ <div class="card">
+  <p>Copy the SR&amp;ED folder template to your shared drive. For each new project, copy the project folder and rename it with the project code.</p>
+  <pre class="tree" id="tree">${esc(TREE)}</pre>
+  <button class="btn sm" data-act="copy" data-src="tree">Copy folder structure</button>
+  <div class="grid" style="margin-top:12px">${F('claim.folderLoc','Where does the SR&ED folder live?',{ph:'e.g. SharePoint > Finance > SR&ED',cls:'s2'})}</div>
+  ${CK('checks.s_folder',SETUP_CHECKS[0][1])}
+ </div>
+
+ <h2>2. Adopt one naming convention</h2>
+ <div class="card">
+  <p><b>Format:</b> <code>YYYY-MM-DD_ProjectCode_Short-Description</code><br>Files sort chronologically, which is exactly how CRA reviews a project. Project codes are P + fiscal year + sequence (P26-01, P26-02).</p>
+  <div class="grid">
+   <div><label class="f"><span>Try it: date</span><input type="date" id="nm_d" value="${today()}"></label></div>
+   <div><label class="f"><span>Project code</span><input type="text" id="nm_c" value="${esc(P()?P().code:'P26-01')}"></label></div>
+   <div><label class="f"><span>Short description</span><input type="text" id="nm_s" placeholder="Seal failure at 150C"></label></div>
+  </div>
+  <p style="margin-top:10px">Result: <code id="nm_out">${ex}</code> <button class="btn sm" data-act="copy" data-src="nm_out">Copy</button></p>
+  <p class="small">Examples: 2026-09-14_P26-01_Seal-failure-at-150C.pdf &middot; 2026-10-02_P26-01_Supplier-email-elastomer-limits.pdf &middot; 2026-10-15_P26-01_Field-trial-2-results.xlsx</p>
+  ${CK('checks.s_naming',SETUP_CHECKS[1][1])}
+ </div>
+
+ <h2>3. Create project codes where the money is</h2>
+ <div class="card"><p>Every SR&amp;ED project gets one code, used identically across every system. Set it up before work begins.</p>
+  ${CODES.map(c=>CK('checks.'+c[0],c[1],c[2])).join('')}
+  ${CK('checks.s_codes',SETUP_CHECKS[2][1])}
+ </div>
+
+ <h2>4. Capture evidence at the source</h2>
+ <div class="card"><p>People won’t go out of their way to document. Build capture into the tools they already use.</p>
+  ${CAPTURE.map(c=>CK('checks.'+c[0],c[1],c[2])).join('')}
+  <div class="grid" style="margin-top:10px">${F('claim.sredEmail','Shared SR&ED email address',{ph:'sred@yourcompany.com'})}</div>
+  ${CK('checks.s_ticket',SETUP_CHECKS[3][1])}${CK('checks.s_email',SETUP_CHECKS[4][1])}${CK('checks.s_photo',SETUP_CHECKS[5][1])}${CK('checks.s_supplog',SETUP_CHECKS[6][1])}
+ </div>
+
+ <h2>5–6. Roles and cadence</h2>
+ <div class="card">
+  <table><tr><th>Role</th><th>Responsibility</th></tr>${ROLES.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td></tr>`).join('')}</table>
+  <br><table><tr><th>When</th><th>What</th><th>Who</th></tr>${CADENCE.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>
+  ${CK('checks.s_monthly',SETUP_CHECKS[8][1])}${CK('checks.s_qtr',SETUP_CHECKS[10][1])}
+ </div>
+
+ <h2>7. Retention and access</h2>
+ <div class="card">${RETENTION.map(r=>CK('checks.'+r[0],r[1])).join('')}${CK('checks.s_ita',SETUP_CHECKS[9][1])}</div>
+ <div class="card tint"><b>Setup completion:</b> <span data-live="syscount"></span><div class="bar" style="margin-top:6px"><i data-live-w="sys"></i></div></div>
+ ${nextBtns()}`;
+};
+function sysPct(){ const ids=[...SETUP_CHECKS.map(x=>x[0]),...CAPTURE.map(x=>x[0]),...CODES.map(x=>x[0]),...RETENTION.map(x=>x[0])]; const n=ids.filter(i=>S.checks[i]).length; return [n,ids.length]; }
+LIVE_syscount=()=>{const [n,t]=sysPct();return `${n} of ${t} items ticked`};
+
+V.coord=()=>`<h1>SR&amp;ED Coordinator</h1>
+ <p class="lead">The one person who keeps your evidence system running. Typically an operations manager, controller, engineering lead, or project coordinator: someone organised, with visibility into both field work and costs.</p>
+ <div class="card"><div class="grid">
+  ${F('coord.name','Coordinator name')}${F('coord.title','Title')}${F('coord.email','Email',{type:'email'})}${F('coord.phone','Phone',{type:'tel'})}${F('coord.hours','Expected hours per month',{ph:'2–4 typical'})}
+ </div>
+ <p class="small" style="margin-top:10px">Works with project leads, accounting, field supervisors and the Impact Technical Advisors SR&amp;ED team. Plus a few days at fiscal year end.</p></div>
+ <h2>Responsibilities</h2>
+ <div class="card">${COORD_TASKS.map((g,gi)=>`<h3 style="margin-top:${gi?'14':'0'}px">${g[0]}</h3><ul style="margin:0;padding-left:20px">${g[1].map(x=>`<li>${x}</li>`).join('')}</ul>`).join('')}</div>
+ <h2>What the Coordinator does not need to do</h2>
+ <div class="card tint"><ul style="margin:0;padding-left:20px"><li>Write the technical narrative or the T661. ITA does that from the evidence you collect.</li><li>Calculate credits or decide what’s eligible. ITA handles eligibility and the financial calculation.</li><li>Be a technical expert. The job is making sure evidence is captured and filed, not evaluating it.</li></ul></div>
+ <h2>How success is measured</h2>
+ <div class="card">${['Every active SR&ED project has a completed Project Setup Sheet','A Monthly Check-In Log is on file for every project, every month','SR&ED costs are coded at entry, with no year-end re-allocation needed','Year-end claim preparation takes days, not weeks'].map((t,i)=>CK('checks.succ'+i,t)).join('')}
+ ${CK('checks.coord_ok','Coordinator has reviewed this role description and accepted it')}</div>
+ ${nextBtns()}`;
+
+V.project=()=>{
+ if(!S.projects.length) return `<h1>Project setup</h1>${projBar()}${nextBtns()}`;
+ const p=P(); const sc='@.screen.';
+ return `<h1>Project setup sheet</h1>
+ <p class="lead">Complete at project kickoff, one sheet per SR&amp;ED project. Follow the order CRA reviews work in: Problem → Uncertainty → Hypothesis → Testing → Results → Advancement.</p>
+ ${projBar()}
+ <div class="card"><div class="grid">
+  ${F('@.name','Project name')}${F('@.code','Project code',{hint:'P + fiscal year + sequence'})}${F('@.fy','Fiscal year')}
+  ${F('@.start','Start date',{type:'date',hint:'When the uncertainty is identified and work begins.'})}
+  ${F('@.end','Completion or expected completion',{type:'date'})}
+  ${F('@.lead','Project lead')}${F('@.coordinator','SR&ED Coordinator')}
+ </div></div>
+
+ <div class="card tint"><b>Screening test:</b> if a competent engineer or technician in your field could have solved the problem with standard practice, it is probably not SR&amp;ED. If they would have had to experiment to find out, it may be. A failed project can still qualify.
+  <div class="grid" style="margin-top:10px">
+   <div><b>Likely to qualify</b>${SCREEN_Y.map((t,i)=>CK(sc+'y'+i,t)).join('')}</div>
+   <div><b>Unlikely to qualify on its own</b>${SCREEN_N.map((t,i)=>CK(sc+'n'+i,t)).join('')}</div>
+  </div></div>
+
+ <h2>1. Technical challenge and project summary</h2>
+ <div class="card"><div class="grid">
+  ${F('@.fields.problem','What technical problem are we trying to solve? Why won’t standard methods work?',{type:'area',rows:4,cls:'sall'})}
+  ${F('@.fields.summary','Project summary',{type:'area',rows:4,cls:'sall',hint:'What are you trying to build, fix, or improve? Why don’t existing tools, methods, or products already do it?'})}
+ </div></div>
+
+ <h2>2. Technological uncertainty</h2>
+ <div class="card">${F('@.fields.uncertainty','The technical question you can’t answer yet with standard industry knowledge',{type:'area',rows:4,hint:'Good: “Can this tool maintain a seal at 150°C and 35 MPa?”  Not eligible: “Will customers pay for it?”'})}</div>
+
+ <h2>3. Baseline of current practice</h2>
+ <div class="card">${F('@.fields.baseline','What did you, competitors and suppliers already know or try?',{type:'area',rows:4,hint:'List vendor specs, prior designs, standards, and searches done.'})}</div>
+
+ <h2>4. Supplier products considered</h2>
+ <div class="card">${F('@.fields.suppliers','Which supplier products did you look at, and why couldn’t they be used as-is?',{type:'area',rows:3,hint:'Log the details in the Supplier tech log step.'})}</div>
+
+ <h2>5. Hypotheses and planned approach</h2>
+ <div class="card">${cards('@.hyps',[
+   {k:'h',label:'Hypothesis (what might work)',type:'area',span:'all'},
+   {k:'t',label:'How we’ll test it',type:'area'},
+   {k:'c',label:'Success / failure criteria',type:'area'}],{noun:'Hypothesis',add:'Add hypothesis'})}</div>
+
+ <h2>6. Project team</h2>
+ <div class="card">${cards('@.team',[
+   {k:'name',label:'Name'},{k:'role',label:'Role'},{k:'qual',label:'Qualifications / experience',span:2},
+   {k:'pct',label:'Est. % time on project',ph:'e.g. 40'},{k:'salary',label:'Annual salary ($)',ph:'optional',hint:'Used for the cost estimate'},
+   {k:'spec',label:'Specified employee (owns 10%+ of shares or related to someone who does)',type:'check',span:2}],
+   {title:(r,i)=>r.name||('Team member '+(i+1)),add:'Add team member'})}</div>
+
+ <h2>7. Contractors and third parties</h2>
+ <div class="card">${cards('@.contractors',[
+   {k:'co',label:'Company'},{k:'scope',label:'Scope of work',span:2},{k:'ip',label:'Who owns the IP?'},
+   {k:'al',label:'Arm’s length?',type:'select',opts:['Yes','No']},{k:'prov',label:'Province where work was done',ph:'AB / BC / SK / other'}],
+   {title:(r,i)=>r.co||('Contractor '+(i+1)),add:'Add contractor'})}</div>
+
+ <h2>8. Funding and customer involvement</h2>
+ <div class="card"><table>${FUND_Q.map(q=>YN('@.fund.'+q[0],q[1])).join('')}</table>
+  <p class="small">If any answer is Yes, file the agreement in 06 Financial and flag it to ITA.</p>
+  ${F('@.fundNotes','Details',{type:'area',rows:2,ph:'Funder, amount, customer, agreement name…'})}</div>
+
+ <h2>9. Setup confirmed</h2>
+ <div class="card">${CK('@.setup.folder','Project folder created from template and named with the project code')}${CK('@.setup.codes','Project code set up in accounting, timesheets, and purchasing')}${CK('@.setup.monthly','Monthly check-in booked with the project lead')}
+  <div class="grid" style="margin-top:8px">${F('@.setup.leadSig','Project lead (typed name & date)')}${F('@.setup.coordSig','Coordinator (typed name & date)')}</div></div>
+ ${nextBtns()}`;
+};
+
+V.evidence=()=>{
+ if(!S.projects.length) return `<h1>Evidence checklist</h1>${projBar()}${nextBtns()}`;
+ return `<h1>Evidence checklist</h1>
+ <p class="lead">CRA expects evidence created at the time the work was done. Tick each item once it exists and note where it is stored. Capture sections 1–7 as the work happens.</p>
+ ${projBar()}
+ <div class="card tint"><b>Progress for this project:</b> <span data-live="evcount"></span><div class="bar" style="margin-top:6px"><i data-live-w="ev"></i></div></div>
+ ${EVID.map(s=>`<h2>Section ${s.sec}: ${s.t}</h2><p class="small">${s.w}</p><div class="card">${s.items.map(i=>CK(`@.ev.${i[0]}.d`,i[1],i[2],{loc:`@.ev.${i[0]}.l`})).join('')}</div>`).join('')}
+ <div class="card"><b>Section 9 (one-time setup)</b> lives in the <a href="#" data-act="go" data-to="system">Evidence system</a> step. <b>Section 8 (year-end compilation)</b> is on <a href="#" data-act="go" data-to="yearend">Year-end &amp; costs</a>.</div>
+ ${nextBtns()}`;
+};
+LIVE_evcount=()=>{const p=P();if(!p)return'';const n=EVID_ALL.filter(id=>p.ev[id]&&p.ev[id].d).length;return `${n} of ${EVID_ALL.length} items captured (${Math.round(n/EVID_ALL.length*100)}%)`};
+
+V.suppliers=()=>{
+ if(!S.projects.length) return `<h1>Supplier technology log</h1>${projBar()}${nextBtns()}`;
+ const p=P(); const beyond=p.suppliers.filter(s=>s.beyond==='Yes').length, dev=p.suppliers.filter(s=>s.dev==='Yes').length;
+ return `<h1>Supplier technology log</h1>
+ <p class="lead">Buying an innovative supplier product is not SR&amp;ED. Adapting, combining, or pushing it beyond what the supplier has validated can be. This log shows CRA where the supplier’s knowledge ends and your work begins. File a copy in <b>05 Suppliers</b>.</p>
+ ${projBar()}
+ <div class="card tint"><b>When to add an entry:</b> whenever the project uses a new, unproven, or recently released supplier product, material, or component, or uses a known product in a new way or condition.
+  <div style="margin-top:8px"><b data-live="suppsum"></b></div></div>
+ ${cards('@.suppliers',[
+  {k:'date',label:'Date added',type:'date'},{k:'supplier',label:'Supplier'},{k:'contact',label:'Contact'},
+  {k:'product',label:'Product / component',span:2},{k:'isnew',label:'New or unproven?',type:'select',opts:['Yes','No']},
+  {k:'limits',label:'Supplier rated limits / spec',hint:'Temperature, pressure, load, chemistry. Save the data sheet in 05 Suppliers.',span:2},
+  {k:'use',label:'How we used it',span:2,type:'area',rows:2},
+  {k:'beyond',label:'Beyond supplier spec?',type:'select',opts:['Yes','No'],hint:'“Yes” = outside validated limits or an untested combination.'},
+  {k:'gap',label:'Gap: what we had to figure out',type:'area',rows:2,span:'all',hint:'One or two sentences: why couldn’t the product be used as-is?'},
+  {k:'corr',label:'Correspondence (file name / link)',span:2,hint:'Email or call note where the supplier couldn’t answer a technical question.'},
+  {k:'dev',label:'Development agreement?',type:'select',opts:['Yes','No']},{k:'ipOwner',label:'IP owner'},
+  {k:'early',label:'Early-adopter / trial partner?',type:'select',opts:['Yes','No']},{k:'notes',label:'Notes',span:'all'}],
+  {title:(r,i)=>r.product?`${r.product}${r.supplier?' — '+r.supplier:''}`:'Product '+(i+1),add:'Add supplier product',flag:r=>r.beyond==='Yes',badge:r=>r.beyond==='Yes'?'Beyond spec: likely SR&ED integration work':''})}
+ <p style="margin-top:14px"><button class="btn" data-act="csv">Download this log as CSV (Excel)</button></p>
+ <div class="card" style="margin-top:14px">${CK('@.checks_nosupp','No supplier technology was used beyond standard, validated use on this project')}</div>
+ ${nextBtns()}`;
+};
+LIVE_suppsum=()=>{const p=P();if(!p)return'';return `Products logged: ${p.suppliers.length} &nbsp;|&nbsp; Used beyond supplier spec: ${p.suppliers.filter(s=>s.beyond==='Yes').length} &nbsp;|&nbsp; Development agreements: ${p.suppliers.filter(s=>s.dev==='Yes').length}`};
+
+V.monthly=()=>{
+ if(!S.projects.length) return `<h1>Monthly check-ins</h1>${projBar()}${nextBtns()}`;
+ const p=P();
+ const rows=p.checkins.map((c,i)=>[c,i]).sort((a,b)=>b[0].month.localeCompare(a[0].month));
+ return `<h1>Monthly SR&amp;ED check-in</h1>
+ <p class="lead">15 minutes with the project lead, once a month, one entry per project per month. This single habit closes most documentation gaps, and your answers feed the T661 draft.</p>
+ ${projBar()}
+ <p><button class="btn org" data-act="addcheckin">+ New check-in for ${monthLabel(today().slice(0,7))}</button></p>
+ ${rows.length?'':'<div class="card">No check-ins yet. Add this month’s entry to start the log.</div>'}
+ ${rows.map(([c,i])=>`<div class="card"><div class="hd" style="display:flex;gap:10px;align-items:center"><h3 style="margin:0">${monthLabel(c.month)||'New check-in'}</h3><button class="btn sm danger" style="margin-left:auto" data-act="del" data-path="@.checkins" data-i="${i}">Remove</button></div>
+  <div class="grid" style="margin-top:8px">${F(`@.checkins.${i}.month`,'Month / year',{type:'month'})}${F(`@.checkins.${i}.lead`,'Project lead')}${F(`@.checkins.${i}.by`,'Completed by')}${F(`@.checkins.${i}.date`,'Date',{type:'date'})}</div>
+  <div class="grid" style="margin-top:10px">${CHECKIN_Q.map(q=>F(`@.checkins.${i}.${q[0]}`,q[1],{type:'area',rows:3,hint:q[2],cls:'sall'})).join('')}</div>
+  <h4 style="margin-top:14px">Evidence filed this month</h4><div class="grid">${CHECKIN_FILED.map(f=>`<div>${CK(`@.checkins.${i}.filed.${f[0]}`,f[1])}</div>`).join('')}</div></div>`).join('')}
+ ${nextBtns()}`;
+};
+
+V.yearend=()=>{
+ if(!S.projects.length) return `<h1>Year-end &amp; costs</h1>${projBar()}${nextBtns()}`;
+ const p=P(); const m=S.claim.method;
+ const L=(k,label,hint)=>F('@.costs.'+k,label,{money:1,hint,ph:'0.00'});
+ return `<h1>Year-end &amp; costs</h1>
+ <p class="lead">Work through Section 8 with your ITA advisor. Then summarise the costs for each project using the T661 line numbers. Unreconciled numbers are a common audit trigger.</p>
+ ${projBar()}
+ <h2>Section 8: Year-end compilation</h2>
+ <div class="card">${YEAREND.map(y=>CK('checks.'+y[0],y[1],y[2])).join('')}
+  <div id="deadlineBox" data-live="deadlines" style="margin-top:8px"></div></div>
+
+ <h2>Overhead method (applies to the whole claim)</h2>
+ <div class="card"><div class="grid">${F('claim.method','Method',{type:'select',opts:[['proxy','Proxy method (line 160): prescribed proxy amount, 55% of the salary base'],['trad','Traditional method (line 162): actual overhead on line 360']],cls:'s2',hint:'Cannot be changed once the T661 is filed for the year.'})}</div></div>
+
+ <h2>Costs for ${esc(p.code)} ${esc(p.name)}</h2>
+ <div class="card"><div class="grid">
+  ${L('l300','Line 300: Salary of employees directly engaged in SR&ED','Based on time spent, work done in Canada. Specified employees: salary only (no bonuses), capped.')}
+  ${L('l305','Line 305: Taxable benefits')}
+  ${L('l315','Line 315: Salary incurred but not paid within 180 days of year end','Reported here, not included in line 400. Claimed in the year paid.')}
+  ${L('l320','Line 320: Materials consumed or destroyed','Supplies such as cleaning products or glassware are overhead, not materials.')}
+  ${L('l325','Line 325: Materials transformed into other products','Selling them later may trigger ITC recapture.')}
+  ${L('l340','Line 340: Contract payments, arm’s length')}
+  ${L('l345','Line 345: Contract payments, non-arm’s length')}
+  ${m==='trad'?L('l360','Line 360: Overhead and other expenditures (traditional method)','Directly attributable to SR&ED, specifically identified and allocated.'):''}
+  ${L('l370','Line 370: Third-party payments to approved organizations','Attach Form T1263 for each payment.')}
+  ${L('l429','Line 429: Government assistance')}
+  ${L('l432','Line 432: Non-government assistance')}
+  ${L('gl','General ledger total for this project','For reconciliation')}
+ </div>
+ <p><button class="btn" data-act="teamsal">Fill line 300 from team table (salary × % time)</button> <span class="small">Excludes specified-employee bonuses; review with ITA.</span></p>
+ <div data-live="costs" class="card tint"></div></div>
+
+ <h2>Where was the work done? Province split</h2>
+ <div class="card"><p class="small">Provincial credits only apply to work carried out in that province. Enter the share of this project’s SR&amp;ED costs by province (should total 100%).</p>
+  <div class="grid">${F('@.prov.AB','Alberta %',{ph:'0'})}${F('@.prov.BC','British Columbia %',{ph:'0'})}${F('@.prov.SK','Saskatchewan %',{ph:'0'})}${F('@.prov.other','Other %',{ph:'0'})}</div>
+  ${F('@.sites','Work sites and locations',{type:'area',rows:2,ph:'Shop address, field names, wells, customer sites…'})}<div data-live="provsum"></div></div>
+ ${nextBtns()}`;
+};
+function costTotals(p){
+ const c=p.costs||{}; const trad=S.claim.method==='trad';
+ const l306=num(c.l300)+num(c.l305);
+ const l400=l306+num(c.l320)+num(c.l325)+num(c.l340)+num(c.l345)+(trad?num(c.l360):0)+num(c.l370);
+ const base=num(c.l300)+num(c.l305);
+ return {l306,l400,ppa:trad?0:base*0.55,gl:num(c.gl),net:l400-num(c.l429)-num(c.l432)};
+}
+LIVE_costs=()=>{const p=P();if(!p)return'';const t=costTotals(p);const diff=t.gl?t.gl-(t.l400):null;
+ return `<div class="kv"><b>Line 306 salary</b><span>${money(t.l306)}</span><b>Line 400 total</b><span><b>${money(t.l400)}</b></span>${S.claim.method==='trad'?'':`<b>Proxy amount (line 502)</b><span>${money(t.ppa)} <span class="small">(55% of salary base; counts for the ITC, not deductible as SR&amp;ED)</span></span>`}<b>Less assistance</b><span>${money(num(p.costs.l429)+num(p.costs.l432))}</span><b>Net after assistance</b><span>${money(t.net)}</span>${diff!==null?`<b>GL reconciliation</b><span>${Math.abs(diff)<0.5?'<span class="pill ok">Reconciled</span>':`<span class="pill warn">Difference ${money(diff)}</span>`}</span>`:''}</div><p class="small" style="margin:8px 0 0">Indicative totals for working purposes. ITA calculates eligibility and the credit.</p>`};
+LIVE_provsum=()=>{const p=P();if(!p)return'';const t=costTotals(p);const s=['AB','BC','SK','other'].reduce((a,k)=>a+num(p.prov[k]),0);if(!s) return '';return `<p class="small">Total allocated: <b>${s}%</b> ${s===100?'<span class="pill ok">OK</span>':'<span class="pill warn">should equal 100%</span>'}</p>`};
+
+V.t661=()=>{
+ if(!S.projects.length) return `<h1>T661 draft</h1>${projBar()}${nextBtns()}`;
+ const p=P(); const t='@.t661.';
+ return `<h1>T661 draft</h1>
+ <p class="lead">Form T661, Part 2 describes each project in technical language. This page builds a first draft from the answers you have already recorded. ITA turns it into the final narrative with the project lead in the technical interview.</p>
+ ${projBar()}
+ <div class="card warn"><b>How the draft works.</b> The generator assembles your own words from project setup, the supplier log, and monthly check-ins, in the order CRA expects. It does not invent facts. Edit it into precise technical language and add numbers, units and test conditions. Check the wording against the current T661 and CRA guide T4088 before filing: the form is revised periodically. CRA accepts Part 2 for the 20 largest projects; keep descriptions for the rest on file.</div>
+
+ <h2>Part 2, Section A: Project identification</h2>
+ <div class="card"><div class="grid">
+  <div><label class="f"><span>Line 200: Project title and code</span><input type="text" disabled value="${esc((p.code+' '+p.name).trim())}"></label></div>
+  <div><label class="f"><span>Line 202: Start date</span><input type="text" disabled value="${esc(p.start)}"></label></div>
+  <div><label class="f"><span>Line 204: Completion / expected</span><input type="text" disabled value="${esc(p.end)}"></label></div>
+  ${F(t+'l206','Line 206: Primary field of science or technology',{list:'sci',hint:'Choose from Appendix 1 of the CRA guide. Used for statistics only.'})}
+  ${F(t+'l208','Lines 208–210: Claimed in a prior year?',{type:'select',opts:['First claim for this project','Previously claimed']})}
+  ${F(t+'l218','Lines 218–221: Work done jointly with other businesses?',{type:'select',opts:['No','Yes (list names and business numbers in notes)']})}
+ </div><datalist id="sci">${FIELDS_SCI.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+ <p class="small" style="margin:6px 0 0">Edit title, dates and code on the Project setup step.</p></div>
+
+ <h2>Part 2, Section B: Project descriptions</h2>
+ <div class="card tint"><b>Writing guide.</b> Use technical language, not business language. Describe what was unknown, what you did, what you learned. Business improvements alone (lower cost, higher sales, faster turnaround) are not advancement. Learning why an approach fails counts. Include units, pressures, temperatures, materials, tolerances and test results.
+  <p style="margin:8px 0 0"><button class="btn org" data-act="gen" data-which="all">Generate starting draft for all three lines</button></p></div>
+
+ <div class="card">
+  <h3 style="margin-top:0">Line 242: Scientific or technological uncertainty <span class="pill">max 350 words</span></h3>
+  <p class="small">Describe the knowledge base at the start of the project, its limits, and why the uncertainty couldn’t be resolved with generally available knowledge.</p>
+  ${F(t+'l242','',{type:'area',rows:9,max:350})}
+  <button class="btn sm" data-act="gen" data-which="l242">Generate line 242 draft</button>
+ </div>
+ <div class="card">
+  <h3 style="margin-top:0">Line 244: Work performed in the tax year <span class="pill">max 700 words</span></h3>
+  <p class="small">Chronological: hypotheses, experiments or analysis, results and conclusions. Identify work done by contractors. For continuing projects, focus on this year’s work.</p>
+  ${F(t+'l244','',{type:'area',rows:14,max:700})}
+  <button class="btn sm" data-act="gen" data-which="l244">Generate line 244 draft</button>
+ </div>
+ <div class="card">
+  <h3 style="margin-top:0">Line 246: Scientific or technological advancement <span class="pill">max 350 words</span></h3>
+  <p class="small">What new knowledge was achieved or attempted, even if the approach failed. State what you now know that you did not before.</p>
+  ${F(t+'l246','',{type:'area',rows:9,max:350})}
+  <button class="btn sm" data-act="gen" data-which="l246">Generate line 246 draft</button>
+ </div>
+ <div data-live="flags"></div>
+
+ <h2>Part 2, Section C: Additional information</h2>
+ <div class="card"><div class="grid">
+  ${F(t+'prepBy','Lines 253–254: Who prepared the Section B answers?',{type:'select',opts:['Employee directly involved in the project','Another employee of the company','External consultant (ITA)'],cls:'s2'})}
+  ${F(t+'l265','Line 265: Claiming salary for SR&ED performed outside Canada?',{type:'select',opts:['No','Yes']})}
+  ${F(t+'l266','Line 266: Work done on behalf of another party under contract?',{type:'select',opts:['No','Yes']})}
+ </div>
+ <div data-live="secC" style="margin-top:12px"></div></div>
+
+ <h2>Part 3 and 4: Cost summary</h2>
+ <div class="card" data-live="costs"></div>
+
+ <h2>Readiness check</h2>
+ <div data-live="ready"></div>
+ <p class="noprint"><button class="btn pri" data-act="export" data-what="t661">Download T661 draft (Word)</button> <button class="btn" data-act="print">Print</button></p>
+ ${nextBtns()}`;
+};
+function redFlags(text){
+ const re=/\b(customers?|clients?|market(?:ing|s)?|profits?|profitab\w*|revenues?|sales?|commercial\w*|competitive advantage|cost[- ]saving\w*|savings|business case|roi|efficien\w+|faster turnaround|brand\w*)\b/ig;
+ const out=new Set(); let m; while((m=re.exec(text))) out.add(m[0].toLowerCase()); return [...out];
+}
+LIVE_flags=()=>{const p=P();if(!p)return'';const f=redFlags([p.t661.l242,p.t661.l244,p.t661.l246].join(' '));
+ return f.length?`<div class="card warn"><b>Business language detected:</b> ${f.map(x=>`<span class="pill warn">${esc(x)}</span>`).join(' ')}<br><span class="small">CRA looks for technical uncertainty and advancement. Reword commercial benefits as technical objectives (e.g. replace “saves cost” with the technical performance you were trying to achieve).</span></div>`:''};
+LIVE_secC=()=>{const p=P();if(!p)return'';
+ const ppl=p.team.filter(x=>x.name).slice(0,3);
+ const con=p.contractors.filter(x=>x.co);
+ const ev=EVID_ALL.filter(id=>p.ev[id]&&p.ev[id].d).length;
+ return `<table><tr><th>Lines 255–261: Key individuals</th><th>Qualifications</th></tr>${ppl.length?ppl.map(x=>`<tr><td>${esc(x.name)}${x.role?' — '+esc(x.role):''}</td><td>${esc(x.qual)||'<span class="pill warn">add qualifications</span>'}</td></tr>`).join(''):'<tr><td colspan="2"><span class="pill warn">Add team members on Project setup</span></td></tr>'}</table>
+ <table style="margin-top:10px"><tr><th>Lines 267–269: Contractors who performed SR&amp;ED</th><th>Arm’s length</th><th>Province</th></tr>${con.length?con.map(x=>`<tr><td>${esc(x.co)}: ${esc(x.scope)}</td><td>${esc(x.al)}</td><td>${esc(x.prov)}</td></tr>`).join(''):'<tr><td colspan="3">None recorded</td></tr>'}</table>
+ <p class="small" style="margin-bottom:0">Lines 270–282: supporting evidence on file: <b>${ev} of ${EVID_ALL.length}</b> checklist items. Keep documents; don’t submit them with the claim.</p>`};
+LIVE_ready=()=>{const p=P();if(!p)return'';const r=t661Ready(p);const ok=r.filter(x=>x.ok).length;
+ return `<div class="card ${ok===r.length?'ok':''}"><b>${ok} of ${r.length} checks passed</b><div class="bar ${ok===r.length?'g':''}" style="margin:6px 0 10px"><i style="width:${ok/r.length*100}%"></i></div>${r.map(x=>`<div>${x.ok?'<span class="pill ok">✓</span>':x.sev==='should'?'<span class="pill warn">!</span>':'<span class="pill bad">✗</span>'} ${esc(x.msg)}</div>`).join('')}</div>`};
+
+/* draft generators */
+function sentence(s){ s=String(s||'').trim(); if(!s) return ''; return /[.!?]$/.test(s)?s:s+'.'; }
+function gen242(p){
+ const f=p.fields, out=[];
+ if(f.baseline) out.push('Knowledge base at project start: '+sentence(f.baseline));
+ if(f.problem) out.push('Technical problem: '+sentence(f.problem));
+ if(f.uncertainty) out.push('Uncertainty: '+sentence(f.uncertainty));
+ p.suppliers.filter(s=>s.beyond==='Yes'&&s.product).forEach(s=>{
+  out.push(`${s.product}${s.supplier?' ('+s.supplier+')':''} is rated to ${s.limits||'[add rated limits]'}. ${sentence(s.gap)} ${s.corr||s.notes?sentence(s.notes):''}`.replace(/\s+/g,' ').trim());
+ });
+ return out.join('\n\n');
+}
+function gen244(p){
+ const f=p.fields, out=[];
+ if(f.testing) out.push(sentence(f.testing));
+ const hs=p.hyps.filter(h=>h.h);
+ hs.forEach((h,i)=>out.push(`Hypothesis ${i+1}: ${sentence(h.h)}${h.t?' Test approach: '+sentence(h.t):''}${h.c?' Success/failure criteria: '+sentence(h.c):''}`));
+ const cs=[...p.checkins].sort((a,b)=>a.month.localeCompare(b.month));
+ cs.forEach(c=>{
+  const bits=[]; if(c.tried) bits.push('Work: '+sentence(c.tried)); if(c.happened) bits.push('Results: '+sentence(c.happened)); if(c.failed) bits.push('Failures/unexpected results: '+sentence(c.failed)); if(c.supplier) bits.push('Supplier product use beyond rated limits: '+sentence(c.supplier)); if(c.next) bits.push('Next step: '+sentence(c.next));
+  if(bits.length) out.push(`${monthLabel(c.month)}. ${bits.join(' ')}`);
+ });
+ if(f.results) out.push('Results and analysis: '+sentence(f.results));
+ const con=p.contractors.filter(c=>c.co&&c.scope);
+ if(con.length) out.push('Work by contractors: '+con.map(c=>`${c.co} ${sentence(c.scope)}`).join(' '));
+ return out.join('\n\n');
+}
+function gen246(p){
+ const f=p.fields, out=[];
+ if(f.advancement) out.push(sentence(f.advancement));
+ if(f.results&&!f.advancement) out.push('Based on the test results: '+sentence(f.results));
+ const fails=p.checkins.filter(c=>c.failed).map(c=>c.failed);
+ if(fails.length) out.push('Failures observed during the work that increased understanding: '+fails.map(sentence).join(' '));
+ return out.join('\n\n');
+}
+function runGen(which){
+ const p=P(); const G={l242:gen242,l244:gen244,l246:gen246};
+ const list=which==='all'?['l242','l244','l246']:[which];
+ const needConfirm=list.filter(k=>p.t661[k]&&p.t661[k].trim());
+ if(needConfirm.length&&!confirm('This replaces the text already in '+needConfirm.map(k=>'line '+k.slice(1)).join(', ')+'. Continue?')) return;
+ list.forEach(k=>{p.t661[k]=G[k](p)});
+ if(!list.some(k=>p.t661[k])) toast('Nothing to draft from yet: complete Project setup, the supplier log and monthly check-ins first.');
+ else {toast('Starting draft created. Edit it into precise technical language.');}
+ render(true);
+}
+
+V.prov=()=>{
+ if(!S.projects.length) return `<h1>AB / BC / SK</h1>${projBar()}${nextBtns()}`;
+ const sel=['AB','BC','SK'].filter(k=>S.company.prov[k]);
+ const show=sel.length?sel:['AB','BC','SK'];
+ const tab=S.provTab&&show.includes(S.provTab)?S.provTab:show[0];
+ const d=PROV[tab];
+ return `<h1>Alberta, BC &amp; Saskatchewan</h1>
+ <p class="lead">The federal T661 is the base. Each province has its own credit, form and rules, and each requires you to show that the work was physically performed in that province. Pick a province below.</p>
+ ${projBar()}
+ ${sel.length?'':'<div class="card warn">No provinces selected on <a href="#" data-act="go" data-to="company">Company &amp; claim</a>, so all three are shown.</div>'}
+ <div class="tabs noprint">${show.map(k=>`<button class="${k===tab?'on':''}" data-act="provtab" data-k="${k}">${PROV[k].name}</button>`).join('')}</div>
+ <div class="card" style="border-top-left-radius:0">
+  <h2 style="margin-top:0">${d.name}: ${d.prog}</h2>
+  <div class="kv">
+   <b>Rate and refundability</b><span>${d.rate}</span>
+   <b>Form(s)</b><span>${d.forms}</span>
+   <b>Deadline</b><span>${d.due}</span>
+   <b>Link to the T661</b><span>${d.link}</span>
+   <b>Assistance</b><span>${d.assist}</span>
+  </div>
+  ${d.note?`<p class="small" style="margin-top:10px"><i>${d.note}</i></p>`:''}
+ </div>
+ <h2>${d.name} documentation checklist</h2>
+ <div class="card">${d.checks.map(c=>CK('provChecks.'+c[0],c[1])).join('')}</div>
+ <h2>Project cost allocation by province <span class="pill">${esc(P().code)}</span></h2>
+ <div class="card"><div data-live="provtable"></div>
+  <p class="small" style="margin-bottom:0">Enter the percentages on <a href="#" data-act="go" data-to="yearend">Year-end &amp; costs</a>. Amounts shown are indicative and based on line 400.</p></div>
+ <h2>Applies in every province</h2>
+ <div class="card">${PROV_GENERAL.map(c=>CK('provChecks.'+c[0],c[1])).join('')}</div>
+ <div class="card tint small"><b>Sources and caveats.</b> Program details summarise the CRA’s <a target="_blank" rel="noopener" href="https://www.canada.ca/en/revenue-agency/services/scientific-research-experimental-development-tax-incentive-program/provincial-territorial-government-programs.html">provincial and territorial government programs page</a> and the <a target="_blank" rel="noopener" href="https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/t4088/guide-form-t661-scientific-research-experimental-development-expenditures-claim-guide-form-t661.html">Guide to Form T661 (T4088)</a>, reviewed 26 October 2026. Rates, limits and forms change; confirm with ITA before filing.</div>
+ ${nextBtns()}`;
+};
+LIVE_provtable=()=>{const p=P();if(!p)return'';const t=costTotals(p);
+ return `<table><tr><th>Province</th><th class="num">Share</th><th class="num">Indicative amount</th></tr>${[['AB','Alberta'],['BC','British Columbia'],['SK','Saskatchewan'],['other','Other']].map(([k,n])=>`<tr><td>${n}</td><td class="num">${num(p.prov[k])}%</td><td class="num">${money(t.l400*num(p.prov[k])/100)}</td></tr>`).join('')}</table>`};
+
+V.review=()=>{
+ const ps=S.projects;
+ const rows=STEPS.filter(s=>!['start','review'].includes(s.id)).map(s=>{const v=stepPct(s.id);return `<tr><td>${s.t}</td><td style="width:50%"><div class="bar ${v>=1?'g':''}"><i style="width:${(v||0)*100}%"></i></div></td><td class="num">${v==null?'—':Math.round(v*100)+'%'}</td></tr>`}).join('');
+ const gaps=[];
+ if(!S.company.fye) gaps.push('Fiscal year end not entered.');
+ if(!S.coord.name) gaps.push('No SR&ED Coordinator named.');
+ if(!ps.length) gaps.push('No SR&ED projects added.');
+ ps.forEach(p=>{
+  t661Ready(p).filter(x=>!x.ok).forEach(x=>gaps.push(`${p.code}: ${x.msg}`));
+  if(!p.checkins.length) gaps.push(`${p.code}: no monthly check-ins recorded.`);
+  if(!p.suppliers.length&&!p.checks_nosupp) gaps.push(`${p.code}: supplier log empty (add products, or confirm none used beyond spec).`);
+  if(['q_gov','q_cust','q_pay','q_jda','q_supp'].some(k=>p.fund[k]==='Yes')&&!p.fundNotes) gaps.push(`${p.code}: funding or customer involvement flagged but no details recorded.`);
+ });
+ return `<h1>Review &amp; export</h1>
+ <p class="lead">Check what is complete, close the gaps, then save, download, or send the package to your ITA advisor.</p>
+ <div class="card"><table><tr><th>Step</th><th>Progress</th><th class="num">%</th></tr>${rows}</table></div>
+ <h2>Open items (${gaps.length})</h2>
+ <div class="card ${gaps.length?'warn':'ok'}">${gaps.length?`<ul style="margin:0;padding-left:20px">${gaps.map(g=>`<li>${esc(g)}</li>`).join('')}</ul>`:'<b>Nothing outstanding.</b> Send this package to ITA for the technical interview.'}</div>
+ <div data-live="deadlines" class="card"></div>
+ <h2>Save and share</h2>
+ <div class="card"><div class="grid">
+  <div><b>Save this claim file</b><p class="small">Stored in this browser under the name at the top of the page.</p><button class="btn pri" data-act="save">Save</button></div>
+  <div><b>Download a backup</b><p class="small">A .json file you can re-open here later or send to ITA.</p><button class="btn" data-act="download">Download file (.json)</button></div>
+  <div><b>Full package for ITA</b><p class="small">Word document with setup, evidence, check-ins, supplier log, costs and T661 drafts for every project.</p><button class="btn" data-act="export" data-what="all">Download package (Word)</button></div>
+  <div><b>Email to ITA</b><p class="small">Download first, then attach the file to the email.</p><a class="btn" href="mailto:Info@ImpactTechnicalAdvisors.com?subject=${encodeURIComponent('SR&ED claim file: '+(S.name||S.company.name))}">Open email</a></div>
+ </div></div>
+ <div class="card tint"><b>Next with Impact Technical Advisors.</b> ITA runs a short interview with each project lead in the same order (Problem → Uncertainty → Hypothesis → Testing → Results → Advancement), confirms which projects are likely eligible, and identifies documentation gaps before the claim is prepared.<br>Chris Hamilton &middot; 403-630-1243 &middot; Info@ImpactTechnicalAdvisors.com</div>
+ ${nextBtns()}`;
+};
+
+/* ====================================================================
+   LIVE REGIONS
+   ==================================================================== */
+const LIVE={deadlines:()=>LIVE_deadlines(),syscount:()=>LIVE_syscount(),evcount:()=>LIVE_evcount(),suppsum:()=>LIVE_suppsum(),costs:()=>LIVE_costs(),provsum:()=>LIVE_provsum(),flags:()=>LIVE_flags(),secC:()=>LIVE_secC(),ready:()=>LIVE_ready(),provtable:()=>LIVE_provtable()};
+function refreshLive(){
+ document.querySelectorAll('[data-live]').forEach(el=>{ const f=LIVE[el.dataset.live]; if(f) el.innerHTML=f(); });
+ const sp=sysPct(); const w=document.querySelector('[data-live-w=sys]'); if(w) w.style.width=(sp[0]/sp[1]*100)+'%';
+ const e=document.querySelector('[data-live-w=ev]'); if(e&&P()) e.style.width=(EVID_ALL.filter(id=>P().ev[id]&&P().ev[id].d).length/EVID_ALL.length*100)+'%';
+ document.querySelectorAll('textarea[data-wc]').forEach(ta=>{
+  const n=wc(ta.value), max=+ta.dataset.max, out=document.getElementById('wc_'+ta.dataset.wc); if(!out) return;
+  out.textContent=`${n} / ${max} words`; out.className='wc'+(n>max?' over':n>max*0.9?' near':'');
+ });
+ renderNav();
+}
+
+/* ====================================================================
+   NAV + RENDER
+   ==================================================================== */
+function renderNav(){
+ let h='',lastG=null;
+ STEPS.forEach((s,i)=>{
+  if(s.g&&s.g!==lastG){h+=`<div class="grp">${s.g}</div>`;lastG=s.g;}
+  const v=stepPct(s.id); const pct=v==null?'':Math.round(v*100);
+  h+=`<button class="${s.id===STEP?'on':''}" data-act="go" data-to="${s.id}"><span class="n">${i+1}</span>${s.t}<span class="p ${pct===100?'done':''}">${pct===''?'':pct===100?'✓':pct+'%'}</span></button>`;
+ });
+ const nav=document.getElementById('nav'); const sc=nav.scrollTop; nav.innerHTML=h; nav.scrollTop=sc;
+}
+function render(keepScroll){
+ const y=window.scrollY;
+ if(S.projects.length&&CUR>=S.projects.length) CUR=S.projects.length-1;
+ document.getElementById('main').innerHTML=V[STEP]();
+ document.getElementById('fileName').value=S.name||'';
+ refreshLive();
+ bindNaming();
+ window.scrollTo(0,keepScroll?y:0);
+}
+function bindNaming(){
+ const d=document.getElementById('nm_d'); if(!d) return;
+ const up=()=>{const s=(document.getElementById('nm_s').value||'Short-description').trim().replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  document.getElementById('nm_out').textContent=`${document.getElementById('nm_d').value}_${document.getElementById('nm_c').value.trim()}_${s}.pdf`};
+ ['nm_d','nm_c','nm_s'].forEach(id=>document.getElementById(id).addEventListener('input',up));
+}
+
+/* ====================================================================
+   SAVE / LOAD
+   ==================================================================== */
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
+function stamp(){ S.updated=new Date().toISOString(); S.cur=CUR; S.step=STEP; }
+function setStatus(){ const el=document.getElementById('status'); if(!el) return;
+ el.className='status'+(dirty?' dirty':'');
+ el.textContent=dirty?'Saving…':(lastSaved?'Saved '+lastSaved.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}):(S.name?'':'Not named yet')); }
+function persist(){
+ stamp(); const json=JSON.stringify(S);
+ try{
+  localStorage.setItem(LS_AUTO,json);
+  if(S.name.trim()){ localStorage.setItem(LS_FILE+S.name.trim(),json); const idx=listFiles(); if(!idx.includes(S.name.trim())){idx.push(S.name.trim());localStorage.setItem(LS_IDX,JSON.stringify(idx));} }
+  dirty=false; lastSaved=new Date();
+ }catch(e){ dirty=true; const el=document.getElementById('status'); if(el){el.textContent='Browser storage unavailable: use Download'; el.className='status dirty';} return; }
+ setStatus();
+}
+let timer; function touch(){ dirty=true; setStatus(); clearTimeout(timer); timer=setTimeout(persist,500); }
+function listFiles(){ try{return JSON.parse(localStorage.getItem(LS_IDX)||'[]')}catch(e){return []} }
+function loadState(obj){
+ const base=newState(); S=Object.assign(base,obj); S.company=Object.assign(base.company,obj.company||{}); S.company.prov=Object.assign({AB:false,BC:false,SK:false},(obj.company||{}).prov||{});
+ S.claim=Object.assign(base.claim,obj.claim||{}); S.coord=Object.assign(base.coord,obj.coord||{});
+ S.projects=(obj.projects||[]).map(p=>Object.assign(newProjectShell(),p));
+ CUR=Math.min(obj.cur||0,Math.max(S.projects.length-1,0)); STEP=V[obj.step]?obj.step:'start';
+}
+function newProjectShell(){ const keep=S; const p=(()=>{const save=S;try{return newProject()}finally{S=save}})(); return p; }
+function download(name,text,type){ const b=new Blob([text],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500); }
+const fileSafe=s=>(s||'sred-claim').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')||'sred-claim';
+function openModal(html){ closeModal(); const m=document.createElement('div'); m.className='modal'; m.id='modal'; m.innerHTML=`<div>${html}</div>`; m.addEventListener('click',e=>{if(e.target===m)closeModal()}); document.body.appendChild(m); }
+function closeModal(){ const m=document.getElementById('modal'); if(m) m.remove(); }
+function openDialog(){
+ const files=listFiles();
+ openModal(`<h2 style="margin-top:0">Open a claim file</h2>
+  ${files.length?`<table>${files.map(f=>`<tr><td><b>${esc(f)}</b></td><td style="white-space:nowrap"><button class="btn sm pri" data-act="loadfile" data-f="${esc(f)}">Open</button> <button class="btn sm danger" data-act="delfile" data-f="${esc(f)}">Delete</button></td></tr>`).join('')}</table>`:'<p>No files saved in this browser yet.</p>'}
+  <h3>Open a downloaded file</h3><input type="file" id="upl" accept=".json,application/json">
+  <p style="text-align:right;margin-bottom:0"><button class="btn" data-act="closemodal">Close</button></p>`);
+ document.getElementById('upl').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ loadState(JSON.parse(r.result)); closeModal(); persist(); render(); toast('Opened '+(S.name||f.name)); }catch(err){ toast('That file could not be read.'); } }; r.readAsText(f); });
+}
+
+/* ====================================================================
+   EXPORTS
+   ==================================================================== */
+function csvEsc(v){ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function supplierCsv(){
+ const p=P(); const cols=[['date','Date Added'],['supplier','Supplier'],['contact','Contact'],['product','Product / Component'],['isnew','New or Unproven?'],['limits','Supplier Rated Limits / Spec'],['use','How We Used It'],['beyond','Beyond Supplier Spec?'],['gap','Gap: What We Had to Figure Out'],['corr','Correspondence (file name / link)'],['dev','Development Agreement?'],['ipOwner','IP Owner'],['early','Early-Adopter / Trial Partner?'],['notes','Notes']];
+ return [cols.map(c=>csvEsc(c[1])).join(','),...p.suppliers.map(s=>cols.map(c=>csvEsc(s[c[0]])).join(','))].join('\r\n');
+}
+function nl(s){ return esc(s).replace(/\n/g,'<br>')||'<i style="color:#888">(blank)</i>'; }
+function projDoc(p,full){
+ const t=p.t661; const saveCUR=CUR; CUR=S.projects.indexOf(p);
+ const ct=costTotals(p); let h='';
+ h+=`<h1>${esc(p.code)} ${esc(p.name)}</h1>`;
+ h+=`<p>Fiscal year ${esc(p.fy)} &middot; Start ${esc(p.start)||'?'} &middot; Expected completion ${esc(p.end)||'?'} &middot; Lead ${esc(p.lead)||'?'}</p>`;
+ h+=`<h2>T661 Part 2, Section A</h2><table><tr><td>Line 200 Project title</td><td>${esc(p.code+' '+p.name)}</td></tr><tr><td>Line 202 Start date</td><td>${esc(p.start)}</td></tr><tr><td>Line 204 Completion date</td><td>${esc(p.end)}</td></tr><tr><td>Line 206 Field of science</td><td>${esc(t.l206)}</td></tr><tr><td>Lines 208-210</td><td>${esc(t.l208)}</td></tr></table>`;
+ h+=`<h2>T661 Part 2, Section B</h2><h3>Line 242: Scientific or technological uncertainty (${wc(t.l242)} / 350 words)</h3><p>${nl(t.l242)}</p><h3>Line 244: Work performed in the tax year (${wc(t.l244)} / 700 words)</h3><p>${nl(t.l244)}</p><h3>Line 246: Scientific or technological advancement (${wc(t.l246)} / 350 words)</h3><p>${nl(t.l246)}</p>`;
+ h+=`<h2>T661 Part 2, Section C</h2><p>Prepared by: ${esc(t.prepBy)||'?'}. Outside Canada salary: ${esc(t.l265)||'?'}. Work on behalf of another party: ${esc(t.l266)||'?'}.</p>`;
+ h+=`<table><tr><th>Key individual</th><th>Qualifications</th></tr>${p.team.filter(x=>x.name).slice(0,3).map(x=>`<tr><td>${esc(x.name)} ${esc(x.role)}</td><td>${esc(x.qual)}</td></tr>`).join('')}</table>`;
+ if(p.contractors.length) h+=`<table><tr><th>Contractor</th><th>Scope</th><th>Arm's length</th><th>Province</th></tr>${p.contractors.map(c=>`<tr><td>${esc(c.co)}</td><td>${esc(c.scope)}</td><td>${esc(c.al)}</td><td>${esc(c.prov)}</td></tr>`).join('')}</table>`;
+ h+=`<h2>T661 Part 3: Costs</h2><table>${[['l300','Line 300 Salary'],['l305','Line 305 Taxable benefits'],['l315','Line 315 Salary unpaid > 180 days'],['l320','Line 320 Materials consumed'],['l325','Line 325 Materials transformed'],['l340','Line 340 Contracts (arm\'s length)'],['l345','Line 345 Contracts (non-arm\'s length)'],['l360','Line 360 Overhead (traditional)'],['l370','Line 370 Third-party payments'],['l429','Line 429 Government assistance'],['l432','Line 432 Non-government assistance']].map(([k,n])=>`<tr><td>${n}</td><td align="right">${money(num(p.costs[k]))}</td></tr>`).join('')}<tr><td><b>Line 400 total (indicative)</b></td><td align="right"><b>${money(ct.l400)}</b></td></tr>${S.claim.method==='proxy'?`<tr><td>Proxy amount (55% of salary base)</td><td align="right">${money(ct.ppa)}</td></tr>`:''}</table>`;
+ if(full){
+  h+=`<h2>Project setup</h2><h3>Technical problem</h3><p>${nl(p.fields.problem)}</p><h3>Summary</h3><p>${nl(p.fields.summary)}</p><h3>Technological uncertainty</h3><p>${nl(p.fields.uncertainty)}</p><h3>Baseline of current practice</h3><p>${nl(p.fields.baseline)}</p><h3>Supplier products considered</h3><p>${nl(p.fields.suppliers)}</p>`;
+  h+=`<h3>Hypotheses</h3><table><tr><th>Hypothesis</th><th>Test</th><th>Success / failure criteria</th></tr>${p.hyps.filter(x=>x.h).map(x=>`<tr><td>${nl(x.h)}</td><td>${nl(x.t)}</td><td>${nl(x.c)}</td></tr>`).join('')}</table>`;
+  h+=`<h3>Team</h3><table><tr><th>Name</th><th>Role</th><th>Qualifications</th><th>% time</th><th>Specified</th></tr>${p.team.filter(x=>x.name).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.role)}</td><td>${esc(x.qual)}</td><td>${esc(x.pct)}</td><td>${x.spec?'Yes':''}</td></tr>`).join('')}</table>`;
+  h+=`<h3>Funding and customer involvement</h3><table>${FUND_Q.map(q=>`<tr><td>${q[1]}</td><td>${esc(p.fund[q[0]])||'?'}</td></tr>`).join('')}</table><p>${nl(p.fundNotes)}</p>`;
+  h+=`<h2>Evidence checklist</h2><table><tr><th>Item</th><th>Captured</th><th>Location</th></tr>${EVID.flatMap(s=>s.items).map(i=>{const e=p.ev[i[0]]||{};return `<tr><td>${esc(i[1])}</td><td>${e.d?'Yes':'No'}</td><td>${esc(e.l)}</td></tr>`}).join('')}</table>`;
+  h+=`<h2>Supplier technology log</h2><table><tr><th>Date</th><th>Supplier</th><th>Product</th><th>Rated limits</th><th>Use</th><th>Beyond spec?</th><th>Gap</th><th>Correspondence</th><th>Dev. agreement</th></tr>${p.suppliers.map(s=>`<tr><td>${esc(s.date)}</td><td>${esc(s.supplier)}</td><td>${esc(s.product)}</td><td>${esc(s.limits)}</td><td>${esc(s.use)}</td><td>${esc(s.beyond)}</td><td>${esc(s.gap)}</td><td>${esc(s.corr)}</td><td>${esc(s.dev)} ${esc(s.ipOwner)}</td></tr>`).join('')}</table>`;
+  h+=`<h2>Monthly check-ins</h2>`+[...p.checkins].sort((a,b)=>a.month.localeCompare(b.month)).map(c=>`<h3>${monthLabel(c.month)}</h3><table>${CHECKIN_Q.map(q=>`<tr><td width="30%">${esc(q[1])}</td><td>${nl(c[q[0]])}</td></tr>`).join('')}</table>`).join('');
+  h+=`<h2>Provincial allocation</h2><p>AB ${num(p.prov.AB)}% &middot; BC ${num(p.prov.BC)}% &middot; SK ${num(p.prov.SK)}% &middot; Other ${num(p.prov.other)}%. Work sites: ${esc(p.sites)}</p>`;
+ }
+ CUR=saveCUR; return h;
+}
+function exportWord(what){
+ const c=S.company; let body=`<h1 style="color:#061c3b">Impact Technical Advisors</h1><p>SR&amp;ED claim ${what==='all'?'package':'T661 draft'}: <b>${esc(S.name||c.name)}</b><br>Company: ${esc(c.name)} &middot; BN ${esc(c.bn)} &middot; Fiscal year end ${esc(c.fye)} &middot; CCPC: ${esc(c.ccpc)}<br>Prepared ${today()}</p><p><i>Draft for review with Impact Technical Advisors. Not a CRA-mandated form and not tax or legal advice.</i></p>`;
+ const ps=what==='all'?S.projects:[P()];
+ ps.forEach(p=>{ body+='<br clear="all" style="page-break-before:always">'+projDoc(p,what==='all'); });
+ if(what==='all'){
+  body+=`<br clear="all" style="page-break-before:always"><h1>Provincial checklists</h1>`;
+  ['AB','BC','SK'].filter(k=>c.prov[k]).forEach(k=>{const d=PROV[k];body+=`<h2>${d.name}: ${d.prog}</h2><p>${esc(d.forms)}<br>Deadline: ${esc(d.due)}</p><table>${d.checks.map(x=>`<tr><td>${esc(x[1])}</td><td>${S.provChecks[x[0]]?'Done':'Open'}</td></tr>`).join('')}</table>`;});
+ }
+ const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>SR&ED</title><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1b2733}h1{color:#061c3b;font-size:18pt}h2{color:#061c3b;font-size:14pt;border-bottom:2px solid #f26419}h3{color:#0d2c57;font-size:11.5pt}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:4px 6px;vertical-align:top;font-size:10pt}th{background:#e8f1f8}</style></head><body>${body}</body></html>`;
+ download(fileSafe(S.name||c.name)+(what==='all'?'_ITA-package':'_T661-draft')+'.doc',html,'application/msword');
+}
+
+/* ====================================================================
+   EVENTS
+   ==================================================================== */
+document.addEventListener('input',e=>{
+ const el=e.target; if(!el.dataset||!el.dataset.k) return;
+ if(el.type==='radio'){ if(!el.checked) return; }
+ setp(el.dataset.k, el.type==='checkbox'?el.checked:el.value);
+ touch(); refreshLive();
+});
+document.addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset&&el.dataset.act==='pick'){ CUR=+el.value; render(); persistSoon(); return; }
+ if(el.dataset&&el.dataset.k&&(el.type==='checkbox'||el.type==='radio'||el.tagName==='SELECT')){ setp(el.dataset.k, el.type==='checkbox'?el.checked:el.value); touch(); refreshLive(); }
+});
+function persistSoon(){ dirty=true; clearTimeout(timer); timer=setTimeout(persist,300); }
+document.getElementById('fileName').addEventListener('input',e=>{ S.name=e.target.value; touch(); });
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]'); if(!b||b.tagName==='SELECT') return;
+ const a=b.dataset.act;
+ if(a==='go'){ e.preventDefault(); const s=STEPS.find(x=>x.id===b.dataset.to); STEP=s.id; render(); persistSoon(); }
+ else if(a==='save'){ if(!S.name.trim()){ const n=prompt('Name this claim file (e.g. Acme Energy FY2026):',S.company.name?S.company.name+' '+(S.company.fye||'').slice(0,4):''); if(!n) return; S.name=n.trim(); document.getElementById('fileName').value=S.name; } persist(); toast('Saved as “'+S.name+'”'); }
+ else if(a==='open') openDialog();
+ else if(a==='closemodal') closeModal();
+ else if(a==='loadfile'){ const j=localStorage.getItem(LS_FILE+b.dataset.f); if(j){ loadState(JSON.parse(j)); closeModal(); persist(); render(); toast('Opened '+S.name);} }
+ else if(a==='delfile'){ if(!confirm('Delete “'+b.dataset.f+'” from this browser?')) return; localStorage.removeItem(LS_FILE+b.dataset.f); localStorage.setItem(LS_IDX,JSON.stringify(listFiles().filter(x=>x!==b.dataset.f))); openDialog(); }
+ else if(a==='download'){ stamp(); download(fileSafe(S.name||S.company.name)+'.sred.json',JSON.stringify(S,null,2),'application/json'); toast('Downloaded. Keep this file safe.'); }
+ else if(a==='new'){ if(dirty||S.name||S.projects.length){ if(!confirm('Start a new claim file? Save or download the current one first. Saved files remain in “Open”.')) return; persist(); } S=newState(); CUR=0; STEP='start'; lastSaved=null; render(); }
+ else if(a==='add'){ const arr=getp(b.dataset.path); arr.push(T[b.dataset.tpl]()); touch(); render(true); }
+ else if(a==='del'){ const arr=getp(b.dataset.path); if(!confirm('Remove this entry?')) return; arr.splice(+b.dataset.i,1); touch(); render(true); }
+ else if(a==='addproj'){ S.projects.push(newProject()); CUR=S.projects.length-1; touch(); render(true); }
+ else if(a==='delproj'){ if(!confirm('Delete project '+P().code+' and everything recorded for it?')) return; S.projects.splice(CUR,1); CUR=0; touch(); render(true); }
+ else if(a==='addcheckin'){ const c=T.checkins(); const p=P(); c.lead=p.lead; if(p.checkins.some(x=>x.month===c.month)){ toast('A check-in for this month already exists.'); return; } p.checkins.push(c); touch(); render(true); }
+ else if(a==='provtab'){ S.provTab=b.dataset.k; render(true); }
+ else if(a==='gen') runGen(b.dataset.which);
+ else if(a==='teamsal'){ const p=P(); const tot=p.team.reduce((s,t)=>s+(t.spec?0:0)+num(t.salary)*num(t.pct)/100,0); p.costs.l300=tot.toFixed(2); touch(); render(true); toast('Line 300 filled: '+money(tot)); }
+ else if(a==='csv'){ download(fileSafe(P().code+'-supplier-technology-log')+'.csv','﻿'+supplierCsv(),'text/csv'); }
+ else if(a==='export') exportWord(b.dataset.what);
+ else if(a==='print') window.print();
+ else if(a==='copy'){ const el=document.getElementById(b.dataset.src); navigator.clipboard.writeText(el.textContent).then(()=>toast('Copied'),()=>toast('Copy failed')); }
+});
+
+/* ====================================================================
+   BOOT
+   ==================================================================== */
+(function(){
+ let loaded=null; try{ const j=localStorage.getItem(LS_AUTO); if(j) loaded=JSON.parse(j); }catch(e){}
+ S=newState();
+ if(loaded){ try{ loadState(loaded); }catch(e){ S=newState(); } }
+ render();
+ setStatus();
+})();
+</script>
+</body>
+</html>
