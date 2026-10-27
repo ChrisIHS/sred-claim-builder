@@ -404,7 +404,7 @@ function newProject(){
   return {id:uid(),code:`P${y}-${n}`,name:'',fy:(S.company.fye||today()).slice(0,4),start:'',end:'',lead:'',coordinator:S.coord.name||'',
     fields:{problem:'',summary:'',uncertainty:'',baseline:'',suppliers:'',testing:'',results:'',advancement:''},
     hyps:[T.hyps()],team:[T.team()],contractors:[],fund:{},fundNotes:'',screen:{},ev:{},checkins:[],suppliers:[],
-    costs:{},prov:{AB:'',BC:'',SK:'',other:''},sites:'',
+    costs:{},prov:{AB:'',BC:'',SK:'',other:''},sites:'',completedBy:'',updated:'',
     t661:{l206:'',l208:'',l218:'',l242:'',l244:'',l246:'',prepBy:'',l265:'',l266:'',l267:''},setup:{}};
 }
 
@@ -478,7 +478,7 @@ function projBar(){
    ==================================================================== */
 function projEvidencePct(p){ const d=EVID_ALL.filter(id=>p.ev&&p.ev[id]&&p.ev[id].d).length; return d/EVID_ALL.length; }
 function projSetupPct(p){
-  const f=p.fields; const parts=[p.name,p.start,p.lead,f.summary,f.uncertainty,f.baseline,p.hyps.some(h=>h.h&&h.t&&h.c),p.team.some(t=>t.name&&t.role)];
+  const f=p.fields; const parts=[p.name,p.start,p.lead,f.problem,f.summary,f.uncertainty,f.baseline,p.hyps.some(h=>h.h&&h.t&&h.c),f.testing,f.results,f.advancement,p.team.some(t=>t.name&&t.role),p.screen.chk1&&p.screen.chk2];
   return parts.filter(Boolean).length/parts.length;
 }
 function t661Ready(p){
@@ -669,11 +669,15 @@ V.project=()=>{
  return `<h1>Project setup sheet</h1>
  <p class="lead">Complete at project kickoff, one sheet per SR&amp;ED project. Follow the order CRA reviews work in: Problem → Uncertainty → Hypothesis → Testing → Results → Advancement.</p>
  ${projBar()}
+ <div class="card tint"><b>Project Identification Form built in.</b> This page includes ITA\u2019s one-page SR&amp;ED Project Identification Guideline form: project details, the six answers (Problem to Advancement), the supporting-documentation check and the screening check. Field supervisors and engineers can fill in what they know now and update it as the work progresses; it feeds the same project record and the T661 draft, so nothing is entered twice.
+  <p style="margin:8px 0 0" class="noprint"><button class="btn" data-act="export" data-what="idform">Download one-page Identification Form (Word) for ITA review</button></p></div>
  <div class="card"><div class="grid">
   ${F('@.name','Project name')}${F('@.code','Project code',{hint:'P + fiscal year + sequence'})}${F('@.fy','Fiscal year')}
   ${F('@.start','Start date',{type:'date',hint:'When the uncertainty is identified and work begins.'})}
   ${F('@.end','Completion or expected completion',{type:'date'})}
   ${F('@.lead','Project lead')}${F('@.coordinator','SR&ED Coordinator')}
+  ${F('@.sites','Location / site / field',{hint:'Shop address, field, well or customer site.'})}
+  ${F('@.completedBy','Completed by (name, role)')}${F('@.updated','Date last updated',{type:'date'})}
  </div></div>
 
  <div class="card tint"><b>Screening test:</b> if a competent engineer or technician in your field could have solved the problem with standard practice, it is probably not SR&amp;ED. If they would have had to experiment to find out, it may be. A failed project can still qualify.
@@ -682,13 +686,13 @@ V.project=()=>{
    <div><b>Unlikely to qualify on its own</b>${SCREEN_N.map((t,i)=>CK(sc+'n'+i,t)).join('')}</div>
   </div></div>
 
- <h2>1. Technical challenge and project summary</h2>
+ <h2>1. Technical challenge and project summary <span class="pill">Guideline step 1: Problem</span></h2>
  <div class="card"><div class="grid">
   ${F('@.fields.problem','What technical problem are we trying to solve? Why won’t standard methods work?',{type:'area',rows:4,cls:'sall'})}
   ${F('@.fields.summary','Project summary',{type:'area',rows:4,cls:'sall',hint:'What are you trying to build, fix, or improve? Why don’t existing tools, methods, or products already do it?'})}
  </div></div>
 
- <h2>2. Technological uncertainty</h2>
+ <h2>2. Technological uncertainty <span class="pill">Guideline step 2</span></h2>
  <div class="card">${F('@.fields.uncertainty','The technical question you can’t answer yet with standard industry knowledge',{type:'area',rows:4,hint:'Good: “Can this tool maintain a seal at 150°C and 35 MPa?”  Not eligible: “Will customers pay for it?”'})}</div>
 
  <h2>3. Baseline of current practice</h2>
@@ -697,11 +701,18 @@ V.project=()=>{
  <h2>4. Supplier products considered</h2>
  <div class="card">${F('@.fields.suppliers','Which supplier products did you look at, and why couldn’t they be used as-is?',{type:'area',rows:3,hint:'Log the details in the Supplier tech log step.'})}</div>
 
- <h2>5. Hypotheses and planned approach</h2>
+ <h2>5. Hypotheses and planned approach <span class="pill">Guideline step 3</span></h2>
  <div class="card">${cards('@.hyps',[
    {k:'h',label:'Hypothesis (what might work)',type:'area',span:'all'},
    {k:'t',label:'How we’ll test it',type:'area'},
    {k:'c',label:'Success / failure criteria',type:'area'}],{noun:'Hypothesis',add:'Add hypothesis'})}</div>
+
+ <h2>5b. Testing, results and advancement <span class="pill">Guideline steps 4\u20136</span></h2>
+ <div class="card"><div class="grid">
+  ${F('@.fields.testing','4. Testing and experimentation: what trials, prototypes, modifications, or measurements are we running?',{type:'area',rows:4,cls:'sall',hint:'Test plans, trial logs, design iterations, field trials. Update as the work progresses.'})}
+  ${F('@.fields.results','5. Results and analysis: what worked, what failed, and what did the data show?',{type:'area',rows:4,cls:'sall',hint:'Measured results and notes on why something failed.'})}
+  ${F('@.fields.advancement','6. Technological advancement: what do we now know that we didn\u2019t before, even if it failed?',{type:'area',rows:4,cls:'sall',hint:'New technical knowledge generated. Business improvements alone do not count.'})}
+ </div></div>
 
  <h2>6. Project team</h2>
  <div class="card">${cards('@.team',[
@@ -720,6 +731,14 @@ V.project=()=>{
  <div class="card"><table>${FUND_Q.map(q=>YN('@.fund.'+q[0],q[1])).join('')}</table>
   <p class="small">If any answer is Yes, file the agreement in 06 Financial and flag it to ITA.</p>
   ${F('@.fundNotes','Details',{type:'area',rows:2,ph:'Funder, amount, customer, agreement name…'})}</div>
+
+ <h2>8b. Supporting documentation and costs <span class="pill">Guideline step 7</span></h2>
+ <div class="card"><p class="small">Every expense should tie back to a specific project and activity. Hours logged against \u201cgeneral operations\u201d are hard to defend; hours logged against \u201cProject X \u2013 field trial 3\u201d are not. Tick what exists and note where it is stored. These tick the same items as the Evidence checklist step.</p>
+  ${[['e4_ts','Employee hours logged against this project'],['e2_design','Engineering records, drawings, or design changes'],['e2_results','Test results and data'],['e2_field','Field reports, daily logs, or photos'],['e5_inv','Materials consumed or transformed in testing'],['e6_con','Eligible contractor invoices tied to this work']].map(x=>CK('@.ev.'+x[0]+'.d',x[1],'',{loc:'@.ev.'+x[0]+'.l'})).join('')}</div>
+
+ <h2>Screening check before submitting</h2>
+ <div class="card">${CK('@.screen.chk1','This is more than ordinary troubleshooting or routine customization')}${CK('@.screen.chk2','Records link spending to the specific work described above')}
+  <p class="small" style="margin:6px 0 0">Next step: send the completed form to Impact Technical Advisors. ITA runs a short interview with the project lead in the same order, confirms which projects are likely eligible, and identifies documentation gaps before the claim is prepared.</p></div>
 
  <h2>9. Setup confirmed</h2>
  <div class="card">${CK('@.setup.folder','Project folder created from template and named with the project code')}${CK('@.setup.codes','Project code set up in accounting, timesheets, and purchasing')}${CK('@.setup.monthly','Monthly check-in booked with the project lead')}
@@ -1129,8 +1148,21 @@ function projDoc(p,full){
  }
  CUR=saveCUR; return h;
 }
+function idFormExport(){
+ const p=P(), f=p.fields, c=S.company;
+ const secs=[['1. Problem: what technical problem are we trying to solve? Why won\u2019t standard methods work?',f.problem],['2. Uncertainty: what don\u2019t we know, or can\u2019t predict, using existing technical knowledge?',f.uncertainty],['3. Hypothesis: what approach do we think will solve it, and why?',p.hyps.filter(h=>h.h).map(h=>h.h+(h.t?' (Test: '+h.t+')':'')).join('\n')],['4. Testing: what trials, prototypes, modifications, or measurements are we running?',f.testing],['5. Results: what worked, what failed, and what did the data show?',f.results],['6. Advancement: what do we now know that we didn\u2019t before, even if it failed?',f.advancement]];
+ const docs=[['e4_ts','Employee hours logged against this project'],['e2_design','Engineering records, drawings, or design changes'],['e2_results','Test results and data'],['e2_field','Field reports, daily logs, or photos'],['e5_inv','Materials consumed or transformed in testing'],['e6_con','Eligible contractor invoices tied to this work']];
+ const body=`<h1>SR&amp;ED Project Identification Form</h1><p>Impact Technical Advisors &middot; ${esc(c.name)}</p>
+ <h2>Project details</h2><table><tr><td>Project name</td><td>${esc(p.code+' '+p.name)}</td><td>Completed by</td><td>${esc(p.completedBy)}</td></tr><tr><td>Date started / updated</td><td>${esc(p.start)} / ${esc(p.updated)}</td><td>Location / site / field</td><td>${esc(p.sites)}</td></tr><tr><td>Team members involved</td><td colspan="3">${esc(p.team.filter(t=>t.name).map(t=>t.name+(t.role?' ('+t.role+')':'')).join(', '))}</td></tr></table>
+ <h2>Answers</h2><table><tr><th width="45%">Section</th><th>Your answer</th></tr>${secs.map(x=>`<tr><td>${esc(x[0])}</td><td>${nl(x[1])}</td></tr>`).join('')}</table>
+ <h2>7. Supporting documentation and costs</h2><table>${docs.map(d=>{const e=p.ev[d[0]]||{};return `<tr><td>${d[1]}</td><td>${e.d?'Yes':'No'}</td><td>${esc(e.l)}</td></tr>`}).join('')}</table>
+ <h2>Screening check</h2><p>${p.screen.chk1?'[x]':'[ ]'} More than ordinary troubleshooting or routine customization<br>${p.screen.chk2?'[x]':'[ ]'} Records link spending to the specific work above</p>
+ <p><i>Screening tool, not a CRA-mandated form and not tax or legal advice. Final eligibility is determined by the CRA. Send to Impact Technical Advisors for review: Chris Hamilton, 403-630-1243, Info@ImpactTechnicalAdvisors.com.</i></p>`;
+ download(fileSafe(p.code+'-'+p.name)+'_Identification-Form.doc',`<html><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial;font-size:11pt}h1{color:#061c3b}h2{color:#061c3b;border-bottom:2px solid #f26419;font-size:13pt}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:4px 6px;vertical-align:top}th{background:#e8f1f8}</style></head><body>${body}</body></html>`,'application/msword');
+}
 function exportWord(what){
  const c=S.company; let body=`<h1 style="color:#061c3b">Impact Technical Advisors</h1><p>SR&amp;ED claim ${what==='all'?'package':'T661 draft'}: <b>${esc(S.name||c.name)}</b><br>Company: ${esc(c.name)} &middot; BN ${esc(c.bn)} &middot; Fiscal year end ${esc(c.fye)} &middot; CCPC: ${esc(c.ccpc)}<br>Prepared ${today()}</p><p><i>Draft for review with Impact Technical Advisors. Not a CRA-mandated form and not tax or legal advice.</i></p>`;
+ if(what==='idform'){ idFormExport(); return; }
  const ps=what==='all'?S.projects:[P()];
  ps.forEach(p=>{ body+='<br clear="all" style="page-break-before:always">'+projDoc(p,what==='all'); });
  if(what==='all'){
