@@ -389,6 +389,7 @@ const T = { // new-row templates
    STATE
    ==================================================================== */
 const LS_AUTO='ita.sred.autosave', LS_FILE='ita.sred.file.', LS_IDX='ita.sred.index';
+let UNDO=null; // snapshot of a project taken just before a reset
 let S, STEP='start', CUR=0, dirty=false, lastSaved=null;
 function today(){return new Date().toISOString().slice(0,10)}
 function uid(){return 'p'+Math.random().toString(36).slice(2,8)}
@@ -470,7 +471,7 @@ function nextBtns(){
 }
 function projBar(){
   if(!S.projects.length) return `<div class="card warn"><b>No SR&ED projects yet.</b> Each project gets its own setup sheet, evidence checklist, supplier log, check-ins and T661 text.<br><br><button class="btn org" data-act="addproj">+ Add your first project</button></div>`;
-  return `<div class="pbar noprint"><b>Project:</b><select data-act="pick" aria-label="Choose project">${S.projects.map((p,i)=>`<option value="${i}"${i===CUR?' selected':''}>${esc(p.code)} ${esc(p.name||'(unnamed)')}</option>`).join('')}</select><button class="btn" data-act="addproj">+ New project</button><button class="btn" data-act="delproj">Delete this project</button></div>`;
+  return `<div class="pbar noprint"><b>Project:</b><select data-act="pick" aria-label="Choose project">${S.projects.map((p,i)=>`<option value="${i}"${i===CUR?' selected':''}>${esc(p.code)} ${esc(p.name||'(unnamed)')}</option>`).join('')}</select><button class="btn" data-act="addproj">+ New project</button><button class="btn" data-act="resetproj" title="Clear everything entered for this project and start it again">Reset this project</button>${UNDO&&UNDO.id===P().id?'<button class="btn" data-act="undoreset">Undo reset</button>':''}<button class="btn" data-act="delproj">Delete this project</button></div>`;
 }
 
 /* ====================================================================
@@ -1204,6 +1205,8 @@ document.addEventListener('click',e=>{
  else if(a==='add'){ const arr=getp(b.dataset.path); arr.push(T[b.dataset.tpl]()); touch(); render(true); }
  else if(a==='del'){ const arr=getp(b.dataset.path); if(!confirm('Remove this entry?')) return; arr.splice(+b.dataset.i,1); touch(); render(true); }
  else if(a==='addproj'){ S.projects.push(newProject()); CUR=S.projects.length-1; touch(); render(true); }
+ else if(a==='resetproj'){ const p=P(); if(!confirm('Reset project '+p.code+(p.name?' ('+p.name+')':'')+'?\n\nThis clears everything entered for this project: setup answers, evidence ticks, supplier log, check-ins, costs and T661 text. Its code is kept. Company details and other projects are not affected.\n\nYou can undo straight afterwards with \u201cUndo reset\u201d.')) return; UNDO=JSON.parse(JSON.stringify(p)); const fresh=newProject(); fresh.id=p.id; fresh.code=p.code; fresh.fy=p.fy; S.projects[CUR]=fresh; touch(); render(true); toast('Project reset. Use \u201cUndo reset\u201d if that was a mistake.'); }
+ else if(a==='undoreset'){ if(UNDO){ S.projects[CUR]=UNDO; UNDO=null; touch(); render(true); toast('Reset undone.'); } }
  else if(a==='delproj'){ if(!confirm('Delete project '+P().code+' and everything recorded for it?')) return; S.projects.splice(CUR,1); CUR=0; touch(); render(true); }
  else if(a==='addcheckin'){ const c=T.checkins(); const p=P(); c.lead=p.lead; if(p.checkins.some(x=>x.month===c.month)){ toast('A check-in for this month already exists.'); return; } p.checkins.push(c); touch(); render(true); }
  else if(a==='provtab'){ S.provTab=b.dataset.k; render(true); }
