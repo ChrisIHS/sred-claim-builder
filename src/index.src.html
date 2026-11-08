@@ -185,6 +185,57 @@ const TREE = `SR&ED/
       ├─ 07 Photos & Video    Prototypes, setups, failures
       └─ 08 Monthly Logs      Completed Monthly Check-In Logs`;
 
+const SUBS = [
+  ['01 Project Setup','Setup Sheet, baseline research, team list'],
+  ['02 Design','CAD, drawings, sketches, revisions'],
+  ['03 Testing & Trials','Test plans, data, results, lab reports'],
+  ['04 Field Records','Tagged field tickets, JSAs, MOCs, daily reports'],
+  ['05 Suppliers','Supplier Tech Log, spec sheets, emails, agreements'],
+  ['06 Financial','Invoices, BOMs, contractor bills, funding docs'],
+  ['07 Photos & Video','Prototypes, setups, failures'],
+  ['08 Monthly Logs','Completed Monthly Check-In Logs']
+];
+const CRC_T=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t.push(c>>>0);}return t;})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC_T[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+// Minimal ZIP writer (stored, no compression). entries: [{name, data?:string}]; a name ending in "/" is a folder.
+function makeZip(entries){
+  const enc=new TextEncoder(), parts=[], cen=[]; let off=0;
+  const d=new Date(), dt=((d.getFullYear()-1980)<<9|(d.getMonth()+1)<<5|d.getDate()), tm=(d.getHours()<<11|d.getMinutes()<<5|(d.getSeconds()>>1));
+  for(const e of entries){
+    const nm=enc.encode(e.name), data=e.data?enc.encode(e.data):new Uint8Array(0), crc=crc32(data), dir=e.name.endsWith('/');
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,tm,true);h.setUint16(12,dt,true);
+    h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer),nm,data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,tm,true);c.setUint16(14,dt,true);
+    c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,nm.length,true);
+    c.setUint32(38,dir?0x10:0,true);c.setUint32(42,off,true);
+    cen.push(new Uint8Array(c.buffer),nm);
+    off+=30+nm.length+data.length;
+  }
+  let cs=0; cen.forEach(x=>cs+=x.length);
+  const end=new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true);end.setUint16(8,entries.length,true);end.setUint16(10,entries.length,true);end.setUint32(12,cs,true);end.setUint32(16,off,true);
+  return new Blob([...parts,...cen,new Uint8Array(end.buffer)],{type:'application/zip'});
+}
+function folderZip(){
+  const clean=x=>String(x||'').replace(/[\\/:*?"<>|]/g,'-').trim();
+  const projs=S.projects.length?S.projects.map(p=>({code:p.code,name:clean(p.name)||'Project Name',fy:p.fy||'2026'})):[{code:'P26-01',name:'Project Name',fy:'2026'}];
+  const co=clean(S.company.name);
+  const E=[{name:'SR&ED/'},{name:'SR&ED/README.txt',data:`SR&ED evidence folder${co?' for '+co:''}\r\nCreated ${today()} with the SR&ED Claim Builder (Impact Technical Advisors).\r\n\r\nOne folder per fiscal year, one project folder per SR&ED project, named with the project code.\r\nName files YYYY-MM-DD_ProjectCode_Short-Description, e.g. 2026-09-14_P26-01_Seal-failure-at-150C.pdf\r\nUpload this folder to SharePoint, OneDrive or Google Drive, then give the SR&ED Coordinator and ITA access.\r\n`}];
+  const fys=[...new Set(projs.map(p=>p.fy))].sort();
+  for(const fy of fys){
+    E.push({name:`SR&ED/FY${fy}/`},{name:`SR&ED/FY${fy}/_Year-End/`},{name:`SR&ED/FY${fy}/_Year-End/_README.txt`,data:'T661 working files, cost summary, project list.\r\n'});
+    for(const p of projs.filter(x=>x.fy===fy)){
+      const base=`SR&ED/FY${fy}/${p.code} ${p.name}/`; E.push({name:base});
+      for(const [n,d] of SUBS) E.push({name:base+n+'/'},{name:base+n+'/_README.txt',data:d+'.\r\nName files YYYY-MM-DD_'+p.code+'_Short-Description.\r\n'});
+    }
+  }
+  return makeZip(E);
+}
+function downloadBlob(name,blob){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500); }
+
 const CAPTURE = [
   ['cap_tickets','Field tickets','Add an “Experimental / Trial” checkbox and a project code dropdown to your digital field tickets (Pronto Forms or similar). Route tagged tickets to 04 Field Records, or export them monthly.'],
   ['cap_email','Email','Create a shared address (e.g. sred@yourcompany.com). Staff CC or forward technical and supplier emails; the Coordinator files them weekly.'],
@@ -608,7 +659,8 @@ V.system=()=>{
  <div class="card">
   <p>Copy the SR&amp;ED folder template to your shared drive. For each new project, copy the project folder and rename it with the project code.</p>
   <pre class="tree" id="tree">${esc(TREE)}</pre>
-  <button class="btn sm" data-act="copy" data-src="tree">Copy folder structure</button>
+  <button class="btn sm org" data-act="foldzip">Download folder template (.zip)</button> <button class="btn sm" data-act="copy" data-src="tree">Copy folder structure</button>
+  <p class="small" style="margin:8px 0 0">The zip is built from your project list: one folder per project, named with its project code, each with the eight subfolders. Unzip it, then drag the <b>SR&amp;ED</b> folder into your shared drive. In Google Drive use New &gt; Folder upload. In SharePoint or OneDrive use Upload &gt; Folder. Add projects in Project setup and download again to get folders for them.</p>
   <div class="grid" style="margin-top:12px">${F('claim.folderLoc','Where does the SR&ED folder live?',{ph:'e.g. SharePoint > Finance > SR&ED',cls:'s2'})}</div>
   ${CK('checks.s_folder',SETUP_CHECKS[0][1])}
  </div>
@@ -1410,6 +1462,7 @@ document.addEventListener('click',e=>{
  else if(a==='csv'){ download(fileSafe(P().code+'-supplier-technology-log')+'.csv','﻿'+supplierCsv(),'text/csv'); }
  else if(a==='export') exportWord(b.dataset.what);
  else if(a==='print') window.print();
+ else if(a==='foldzip'){ downloadBlob('SRED-folder-template.zip',folderZip()); toast('Folder template downloaded'); }
  else if(a==='copy'){ const el=document.getElementById(b.dataset.src); navigator.clipboard.writeText(el.textContent).then(()=>toast('Copied'),()=>toast('Copy failed')); }
 });
 
