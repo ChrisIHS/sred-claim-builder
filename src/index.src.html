@@ -92,6 +92,8 @@ pre.tree{background:var(--navy);color:#e8f1f8;padding:14px 16px;border-radius:8p
 .modal{position:fixed;inset:0;background:rgba(6,28,59,.55);display:grid;place-items:center;z-index:50;padding:16px}
 .modal>div{background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:20px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:99px;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+details.help{background:#f1f7fc;border:1px solid #c8dcec;border-radius:10px;padding:10px 14px;margin:10px 0}
+details.help summary{cursor:pointer;font-weight:700;color:var(--navy)}
 footer{max-width:1400px;margin:0 auto;padding:20px 28px 40px;color:var(--mut);font-size:.82rem;border-top:1px solid var(--line)}
 .small{font-size:.85rem;color:var(--mut)}
 .num{text-align:right}
@@ -125,6 +127,7 @@ footer{max-width:1400px;margin:0 auto;padding:20px 28px 40px;color:var(--mut);fo
     <button class="btn" data-act="open">Open</button>
     <button class="btn" data-act="download">Download</button>
     <button class="btn" data-act="new">New</button>
+    <button class="btn org" data-act="go" data-to="help">Help</button>
   </div>
 </header>
 <div class="shell">
@@ -466,12 +469,13 @@ function cards(path,spec,o){ // o: add label, title fn, minimum
 }
 function nextBtns(){
   const i=STEPS.findIndex(s=>s.id===STEP);
+  if(i<0) return '';
   const pr=STEPS[i-1], nx=STEPS[i+1];
   return `<div class="nav2 noprint">${pr?`<button class="btn" data-act="go" data-to="${pr.id}">← ${pr.t}</button>`:'<span></span>'}${nx?`<button class="btn pri" data-act="go" data-to="${nx.id}">Next: ${nx.t} →</button>`:''}</div>`;
 }
 function projBar(){
   if(!S.projects.length) return `<div class="card warn"><b>No SR&ED projects yet.</b> Each project gets its own setup sheet, evidence checklist, supplier log, check-ins and T661 text.<br><br><button class="btn org" data-act="addproj">+ Add your first project</button></div>`;
-  return `<div class="pbar noprint"><b>Project:</b><select data-act="pick" aria-label="Choose project">${S.projects.map((p,i)=>`<option value="${i}"${i===CUR?' selected':''}>${esc(p.code)} ${esc(p.name||'(unnamed)')}</option>`).join('')}</select><button class="btn" data-act="addproj">+ New project</button><button class="btn" data-act="resetproj" title="Clear everything entered for this project and start it again">Reset this project</button>${UNDO&&UNDO.id===P().id?'<button class="btn" data-act="undoreset">Undo reset</button>':''}<button class="btn" data-act="delproj">Delete this project</button></div>`;
+  return `<div class="pbar noprint"><b>Project:</b><select data-act="pick" aria-label="Choose project">${S.projects.map((p,i)=>`<option value="${i}"${i===CUR?' selected':''}>${p.sample?'[SAMPLE] ':''}${esc(p.code)} ${esc(p.name||'(unnamed)')}</option>`).join('')}</select><button class="btn" data-act="addproj">+ New project</button><button class="btn" data-act="resetproj" title="Clear everything entered for this project and start it again">Reset this project</button>${UNDO&&UNDO.id===P().id?'<button class="btn" data-act="undoreset">Undo reset</button>':''}<button class="btn" data-act="delproj">Delete this project</button></div>`;
 }
 
 /* ====================================================================
@@ -515,6 +519,7 @@ function stepPct(id){
     case 'yearend': return p?(YEAREND.filter(y=>S.checks[y[0]]).length/YEAREND.length):null;
     case 't661': { if(!p) return null; const r=t661Ready(p); return r.filter(x=>x.ok).length/r.length; }
     case 'prov': { const keys=[...PROV_GENERAL.map(x=>x[0])]; ['AB','BC','SK'].forEach(k=>{ if(S.company.prov[k]) PROV[k].checks.forEach(c=>keys.push(c[0])); }); return keys.filter(k=>S.provChecks[k]).length/keys.length; }
+    case 'rollout': return ROLLOUT_IDS.filter(k=>S.checks['ro_'+k]).length/ROLLOUT_IDS.length;
     case 'review': return null;
   }
 }
@@ -534,7 +539,7 @@ V.start=()=>`
     <p>Type a name in the box at the top right (for example <i>Acme Energy FY2026</i>) and press <b>Save</b>. Your work also saves automatically in this browser as you go.</p>
     <p class="small" style="margin-bottom:0">Browser storage can be cleared, so use <b>Download</b> regularly to keep a copy you can re-open later with <b>Open</b>, or send to your ITA advisor.</p>
   </div>
-  <p><button class="btn org" data-act="go" data-to="company">Begin: Company &amp; claim →</button></p>
+  <p><button class="btn org" data-act="go" data-to="company">Begin: Company &amp; claim →</button> <button class="btn" data-act="go" data-to="help">How to use this</button> <button class="btn" data-act="sample">Try a sample project</button> <button class="btn" data-act="go" data-to="rollout">Rollout plan</button></p>
  </div>
  <div class="card">
   <h3 style="margin-top:0">How the twelve steps fit together</h3>
@@ -1036,6 +1041,194 @@ V.review=()=>{
 };
 
 /* ====================================================================
+   HELP, ROLLOUT PLAN AND SAMPLE PROJECT
+   ==================================================================== */
+const HELP_STEPS=[{id:'help',t:'How to use this',g:'Help',help:1},{id:'rollout',t:'Rollout plan',g:'Help',help:1}];
+const ALLSTEPS=STEPS.concat(HELP_STEPS);
+
+const STEP_HELP={
+ company:{what:'Records the corporate facts that drive credit rates and deadlines, and which provincial pages apply.',who:'SR&ED Coordinator, with accounting',time:'10 minutes',
+  ex:'Fiscal year end 2026-12-31 gives a federal T661 deadline of 2028-06-30 (18 months, no extensions). Tick Alberta if any work is done in Alberta.'},
+ system:{what:'Sets up the folders, naming, project codes and capture habits once, so evidence lands in the right place all year.',who:'SR&ED Coordinator, with IT and accounting',time:'About one day',
+  ex:'A file named 2026-10-02_P26-01_Supplier-email-elastomer-limits.pdf goes in P26-01 Project Name / 05 Suppliers. Date first, then project code, then a short description.'},
+ coord:{what:'Names the one person who owns the routine and shows what the job involves.',who:'Business owner or manager choosing the Coordinator',time:'15 minutes',
+  ex:'Operations manager, about 3 hours a month. Does not write the T661 or calculate credits; ITA does that.'},
+ project:{what:'Captures the project at kickoff in the order CRA reviews it: problem, uncertainty, hypothesis, testing, results, advancement. Includes ITA’s one-page Project Identification Form.',who:'Project lead, with the Coordinator',time:'45–60 minutes per project at kickoff, then short updates',
+  ex:'Good uncertainty: “Can the seal compound hold 35 MPa at 150°C when the supplier has no data above 120°C?” Not eligible: “Will customers pay for it?”'},
+ evidence:{what:'Tracks which records exist for each project and where they are stored, so nothing has to be hunted down at year end.',who:'SR&ED Coordinator',time:'10 minutes a month per project',
+  ex:'Test and trial results: ticked, stored at 03 Testing & Trials / 2026-10-15_P26-01_Field-trial-2-results.xlsx.'},
+ suppliers:{what:'Shows where the supplier’s knowledge ends and your own work begins. Using a product beyond its rated limits is often where eligible work sits.',who:'Project lead or Coordinator',time:'5 minutes per product',
+  ex:'HNBR-X seal compound (Acme Elastomers) is rated to 120°C and 25 MPa. Used at 150°C and 35 MPa. Beyond spec: Yes. Gap: no supplier test data above 120°C, so we had to develop the groove geometry and backup ring.'},
+ monthly:{what:'A 15-minute monthly review per project that creates dated, at-the-time evidence. Your answers feed the T661 draft.',who:'Coordinator and project lead',time:'15 minutes per project, per month',
+  ex:'Tried: pressure-cycled the seal at 140°C. Happened: leaked at cycle 6. Surprise: seal extruded into the gland gap. Next: add a backup ring and retest.'},
+ yearend:{what:'Reconciles costs to the general ledger and summarises them on the T661 line numbers, and records where the work was done by province.',who:'Coordinator and accounting, with ITA',time:'1–2 days at year end',
+  ex:'Line 300 salary $62,000, line 320 materials $8,400, line 340 contractor $15,000. GL total matches, so it shows Reconciled. Province split 70% AB, 30% SK.'},
+ t661:{what:'Drafts Part 2 of the T661 (lines 242, 244, 246) and Section C from the answers already recorded, with word limits and a business-language check.',who:'ITA with the project lead; the Coordinator reviews',time:'1–2 hours per project to refine',
+  ex:'Line 242 opens with the knowledge base at the start (vendor rating, standards), states the unknown, and says why standard practice could not resolve it.'},
+ prov:{what:'Shows the Alberta, BC and Saskatchewan program for each province, its form and deadline, a documentation checklist, and the cost split by province.',who:'ITA and the Coordinator',time:'1–2 hours at year end',
+  ex:'A project run 70% in Alberta and 30% in Saskatchewan needs Alberta IEG forms for the Alberta share and Form T2SCH403 for the Saskatchewan share, each backed by records of where the work was done.'},
+ review:{what:'Pulls together what is complete and what is still open, shows the deadlines, and exports the package for ITA.',who:'Coordinator',time:'15 minutes',
+  ex:'Open items might read: “P26-01: no monthly check-ins recorded” or “Line 244 text: 0 / 700 words”. Close them, then download the package and send it to ITA.'}
+};
+function helpPanel(id){
+ const h=STEP_HELP[id]; if(!h) return '';
+ return `<details class="help noprint"><summary>What’s this step for? Who does it, how long, and an example</summary><div class="kv" style="margin-top:8px"><b>Purpose</b><span>${h.what}</span><b>Who</b><span>${h.who}</span><b>Time</b><span>${h.time}</span><b>Example</b><span>${h.ex}</span></div></details>`;
+}
+
+V.help=()=>{
+ const flow=STEPS.filter(s=>STEP_HELP[s.id]);
+ return `<h1>How to use this</h1>
+ <p class="lead">This tool helps a company capture SR&amp;ED evidence while the work happens, then draft its T661 and the Alberta, BC and Saskatchewan paperwork from what it recorded. It is a documentation aid, not a CRA form, and it does not decide eligibility or calculate the credit.</p>
+ <div class="card tint"><b>Want to see it filled in first?</b> Load a sample project (a downhole seal trial) into your claim file to explore every step with realistic answers. It is marked SAMPLE, and you can delete it from the project bar at any time.
+  <p style="margin:8px 0 0"><button class="btn org" data-act="sample">Load sample project</button> <button class="btn" data-act="go" data-to="rollout">See the rollout plan</button></p></div>
+
+ <h2>Quick start</h2>
+ <div class="card"><ol class="steps">
+  <li><b>Name your claim file</b> in the box at the top right and press <b>Save</b> (for example <i>Acme Energy FY2026</i>).</li>
+  <li>Work down the left-hand menu. <b>Company &amp; claim</b>, <b>Evidence system</b> and <b>Coordinator</b> are done once.</li>
+  <li><b>Add a project</b> and complete <b>Project setup</b> at kickoff. Repeat the project steps for each SR&amp;ED project.</li>
+  <li>Each month, add a <b>Monthly check-in</b> for every project (15 minutes) and keep the evidence checklist and supplier log current.</li>
+  <li>At year end, finish <b>costs</b>, generate the <b>T661 draft</b>, work through the <b>provincial</b> checklist, then use <b>Review &amp; export</b> to send the package to ITA.</li>
+ </ol></div>
+
+ <h2>The components</h2>
+ <div class="card"><table><tr><th>Step</th><th>What it does</th><th>Who</th><th>Time</th></tr>
+ ${flow.map(s=>`<tr><td><a href="#" data-act="go" data-to="${s.id}"><b>${STEPS.indexOf(s)+1}. ${s.t}</b></a></td><td>${STEP_HELP[s.id].what}</td><td>${STEP_HELP[s.id].who}</td><td>${STEP_HELP[s.id].time}</td></tr>`).join('')}</table>
+ <p class="small" style="margin:8px 0 0">Every step also has a collapsible “What’s this step for?” panel under its heading, with an example.</p></div>
+
+ <h2>Saving, backups and sharing</h2>
+ <div class="card"><div class="kv">
+  <b>Save</b><span>Stores the claim file in this browser under the name at the top. It also saves automatically as you type.</span>
+  <b>Download</b><span>Gives you a <code>.sred.json</code> backup file. Browser storage can be cleared or lost if you change computer, so download regularly.</span>
+  <b>Open</b><span>Re-opens a file saved in this browser, or a downloaded <code>.sred.json</code> file from anywhere.</span>
+  <b>New</b><span>Starts a blank claim file. Saved files stay available under Open.</span>
+  <b>Reset this project</b><span>In the dark project bar. Clears one project and keeps its code. Undo is available straight afterwards, until you reload.</span>
+  <b>Send to ITA</b><span>On Review &amp; export: download the Word package, or download the claim file, and email it to ITA.</span>
+  <b>Privacy</b><span>Nothing is sent to a server. Data stays in your browser unless you download or email it.</span>
+ </div></div>
+
+ <h2>Plain-language glossary</h2>
+ <div class="card"><table>
+  ${[['SR&ED','Scientific Research and Experimental Development: the federal tax incentive for work that resolves technological uncertainty.'],
+   ['T661','The CRA form that describes each SR&ED project and its costs.'],
+   ['Technological uncertainty','A technical question that a competent professional could not answer with standard practice or existing knowledge.'],
+   ['Technological advancement','New technical knowledge gained, even if the project failed.'],
+   ['Baseline','What you, competitors and suppliers already knew or had tried before the project.'],
+   ['CCPC','Canadian-controlled private corporation. Affects credit rates and refundability.'],
+   ['Specified employee','Someone who owns 10% or more of the company’s shares, or is related to someone who does. Different salary rules apply.'],
+   ['Arm’s length','A contractor that is independent of your company, not related to it.'],
+   ['Proxy amount (PPA)','The prescribed overhead amount: 55% of the salary base, under the proxy method.'],
+   ['GL','General ledger. Costs claimed should reconcile to it.'],
+   ['MOC / JSA','Management of change record / job safety analysis. Field documents that become evidence when linked to a project.'],
+   ['IEG','Alberta’s Innovation Employment Grant.']].map(x=>`<tr><td style="width:200px"><b>${x[0]}</b></td><td>${x[1]}</td></tr>`).join('')}</table></div>
+
+ <h2>Common questions</h2>
+ <div class="card">
+  ${[['Do we need a project for everything we do?','No. Screen first: if a competent engineer could have solved it with standard practice, it is probably not SR&ED. Use the screening test on Project setup.'],
+   ['What if the project failed?','A failed project can still qualify. Record what you learned and why it failed; that is evidence of uncertainty and advancement.'],
+   ['When must the claim be filed?','Within 18 months of fiscal year end, with no extensions. Company & claim shows your exact date.'],
+   ['Can several people use the same file?','Not at the same time. The file lives in one browser. Download it and pass it on, or have the Coordinator be the only editor.'],
+   ['Who writes the final T661?','ITA, from the evidence you collect. The T661 draft step gives a head start in your own words.']]
+   .map(q=>`<details class="help" style="margin:6px 0"><summary>${q[0]}</summary><p style="margin:8px 0 0">${q[1]}</p></details>`).join('')}</div>
+ <div class="card tint">Questions? Chris Hamilton &middot; 403-630-1243 &middot; Info@ImpactTechnicalAdvisors.com</div>
+ <div class="nav2 noprint"><button class="btn" data-act="go" data-to="start">← Start here</button><button class="btn pri" data-act="go" data-to="rollout">Next: Rollout plan →</button></div>`;
+};
+
+const ROLLOUT=[
+ {id:'r1',t:'Before kickoff',when:'1–2 weeks before',owner:'Business owner / Coordinator',time:'2–3 hours',link:'company',tasks:[
+  'Choose the platform you already use (SharePoint or OneDrive for Microsoft 365, Google Drive for Google Workspace). Do not introduce new software.',
+  'Name the SR&ED Coordinator (about 2–4 hours a month).',
+  'List candidate projects and screen them with the screening test on Project setup.',
+  'Gather corporate details: fiscal year end, CCPC status, associated companies, prior-year claims.',
+  'Confirm which provinces the work is performed in (Alberta, BC, Saskatchewan, other).',
+  'Decide who gets ITA read access to the SR&ED folder.']},
+ {id:'r2',t:'Day 1: build the system',when:'Kickoff day',owner:'Coordinator with IT and accounting',time:'About one day',link:'system',tasks:[
+  'Copy the SR&ED folder template to the shared drive.',
+  'Share the naming convention with the team.',
+  'Create project codes in accounting, payroll/timesheets and purchasing.',
+  'Add an “Experimental / Trial” checkbox and project code to field tickets.',
+  'Create the shared SR&ED email address and announce it.',
+  'Set up phone photo upload to the SR&ED Photos folder.',
+  'Place the Supplier Technology Log in each project’s 05 Suppliers folder.',
+  'Book recurring monthly check-ins and quarterly ITA reviews.',
+  'Give ITA read access.']},
+ {id:'r3',t:'Weeks 1–2: start the projects',when:'First two weeks',owner:'Project leads with Coordinator',time:'45–60 min per project',link:'project',tasks:[
+  'Complete the Project setup (identification form) for each project with its lead.',
+  'Record the baseline of current practice and save the vendor specs.',
+  'Brief field crews in a 10-minute toolbox talk: tick the trial box, take photos, nothing more.',
+  'Log any supplier products used beyond their rated limits.',
+  'Check for funding, customer-paid trials, partnerships or supplier development agreements and file the agreements.']},
+ {id:'r4',t:'First 30 days: build the habit',when:'Weeks 3–5',owner:'Coordinator',time:'30 min weekly, 15 min per project',link:'monthly',tasks:[
+  'Run the first weekly filing of tickets, photos and emails (30 minutes).',
+  'Run the first monthly check-in for every project and file the log.',
+  'Spot-check that timesheets and invoices are coded to the project.',
+  'Hold the first quarterly review with ITA, or book it.']},
+ {id:'r5',t:'Every quarter',when:'Quarterly',owner:'Coordinator with ITA',time:'45 minutes',link:'evidence',tasks:[
+  'Review the folders and evidence checklist with ITA while gaps can still be fixed.',
+  'Flag new projects, customer-funded trials, grants or supplier development agreements.',
+  'Check that every active project has a check-in for each month.']},
+ {id:'r6',t:'Year end and filing',when:'Fiscal year end onward',owner:'Coordinator, accounting, ITA',time:'Several days',link:'yearend',tasks:[
+  'Compile the annual project list and confirm start and end dates.',
+  'Produce the cost summary by project and reconcile it to the general ledger.',
+  'Hold a technical interview between ITA and each project lead.',
+  'Review the T661 draft and complete the provincial checklists.',
+  'File within 18 months of fiscal year end.',
+  'Lock the filed year’s folder to read-only and keep records at least six years.']}
+];
+const ROLLOUT_IDS=ROLLOUT.flatMap(p=>p.tasks.map((_,i)=>`${p.id}_${i}`));
+V.rollout=()=>{
+ const done=ROLLOUT_IDS.filter(k=>S.checks['ro_'+k]).length;
+ return `<h1>Rollout plan</h1>
+ <p class="lead">How to put the system in place at a company, from first decision to filed claim. Tick tasks as they are done; progress is saved in the claim file. Use it self-run, or as the agenda for sessions with ITA.</p>
+ <div class="card tint"><b>Overall:</b> ${done} of ${ROLLOUT_IDS.length} tasks done<div class="bar" style="margin-top:6px"><i style="width:${done/ROLLOUT_IDS.length*100}%"></i></div></div>
+ ${ROLLOUT.map((p,pi)=>{const d=p.tasks.filter((_,i)=>S.checks['ro_'+p.id+'_'+i]).length;return `<h2>Phase ${pi+1}: ${p.t} ${d===p.tasks.length?'<span class="pill ok">Done</span>':`<span class="pill">${d}/${p.tasks.length}</span>`}</h2>
+  <div class="card"><div class="kv" style="margin-bottom:6px"><b>When</b><span>${p.when}</span><b>Owner</b><span>${p.owner}</span><b>Effort</b><span>${p.time}</span></div>
+  ${p.tasks.map((t,i)=>CK('checks.ro_'+p.id+'_'+i,t)).join('')}
+  <p class="small" style="margin:8px 0 0">Related step: <a href="#" data-act="go" data-to="${p.link}">${ALLSTEPS.find(s=>s.id===p.link).t}</a></p></div>`}).join('')}
+
+ <h2>If ITA facilitates the rollout</h2>
+ <div class="card"><table><tr><th>Session</th><th>Length</th><th>Covers</th></tr>
+  <tr><td><b>1. Kickoff</b></td><td>90 minutes</td><td>Company &amp; claim, Evidence system, Coordinator. Leave with the folder, codes and owners decided.</td></tr>
+  <tr><td><b>2. Project setup</b></td><td>60 minutes per project</td><td>Walk each project lead through the identification form: problem to advancement, baseline, team, funding.</td></tr>
+  <tr><td><b>3. First check-in coaching</b></td><td>30 minutes, month 1</td><td>Sit in on the first monthly check-in and the supplier log entries.</td></tr>
+  <tr><td><b>4. Quarterly review</b></td><td>45 minutes</td><td>Evidence gaps, new projects, funding and customer arrangements.</td></tr>
+  <tr><td><b>5. Year-end interviews</b></td><td>60–90 minutes per project</td><td>Technical interview in order: Problem, Uncertainty, Hypothesis, Testing, Results, Advancement.</td></tr>
+ </table></div>
+ <div class="nav2 noprint"><button class="btn" data-act="go" data-to="help">← How to use this</button><span></span></div>`;
+};
+
+function buildSample(){
+ const fy=(S.company.fye||today()).slice(0,4);
+ const p=newProject(); p.sample=true; p.code='SAMPLE-01'; p.fy=fy;
+ p.name='SAMPLE: Downhole seal at 150°C and 35 MPa'; p.start=fy+'-02-03'; p.end=fy+'-11-28'; p.lead='Alex Morgan'; p.coordinator=S.coord.name||'Sam Lee';
+ p.completedBy='Alex Morgan, Engineering Lead'; p.updated=today(); p.sites='Calgary test shop and two field trial sites';
+ Object.assign(p.fields,{
+  problem:'Standard elastomer seals in our cut-and-cap tool extrude or leak above 120°C. Available seal compounds are rated to 120°C and 25 MPa, but the tool must seal at 150°C and 35 MPa.',
+  summary:'Develop a downhole seal arrangement that holds pressure at 150°C and 35 MPa. Existing compounds and standard groove designs do not reach this envelope.',
+  uncertainty:'Can an HNBR-based seal with a modified groove and backup ring hold 35 MPa at 150°C without extrusion, when the supplier has no test data above 120°C?',
+  baseline:'Supplier data sheet (rev C) rates the compound to 120°C and 25 MPa. Industry groove standards cover up to 25 MPa. A literature and patent search found no validated design above 120°C.',
+  suppliers:'HNBR-X compound (Acme Elastomers) considered. It cannot be used as-is because it has no validation data above 120°C and 25 MPa.',
+  testing:'Pressure-cycle and temperature trials in the shop test cell, followed by two field trials with logged pressure and temperature.',
+  results:'Baseline groove leaked at cycle 6 at 140°C due to extrusion. Backup ring reduced extrusion but a larger groove clearance caused a leak path. A revised groove geometry held 35 MPa at 150°C for 10 cycles.',
+  advancement:'We now know that a modified groove geometry with a backup ring extends the seal envelope to 150°C and 35 MPa, and that extrusion into the gland gap, not material degradation, is the limiting failure mode.'});
+ p.hyps=[{h:'A PEEK backup ring prevents extrusion at 35 MPa and 150°C',t:'Pressure-cycle test in shop cell at 140°C then 150°C',c:'No leak across 10 cycles at 35 MPa'},{h:'A narrower groove clearance removes the leak path seen in test 2',t:'Repeat cycle test with revised groove geometry',c:'No leak or visible extrusion after teardown'}];
+ p.team=[{name:'Alex Morgan',role:'Engineering lead',qual:'P.Eng., 12 years in downhole tool design',pct:'40',salary:'130000',spec:false},{name:'Jordan Reid',role:'Field technician',qual:'Journeyman, 8 years in field trials',pct:'25',salary:'85000',spec:false}];
+ p.contractors=[{co:'Example Testing Labs',scope:'High-temperature compound characterization to 160°C',ip:'Our company',al:'Yes',prov:'AB'}];
+ p.fund={q_gov:'No',q_cust:'Yes',q_pay:'No',q_jda:'No',q_supp:'No'}; p.fundNotes='Field trial 2 ran on a customer well during a paying job; 6 crew hours were allocated to the trial.';
+ p.screen={y0:true,y1:true,y2:true,chk1:true,chk2:true};
+ [['e1_sum','01 Project Setup/2026-02-03_SAMPLE-01_Setup-sheet.docx'],['e1_unc',''],['e1_base','01 Project Setup/2026-02-10_SAMPLE-01_Baseline-research.pdf'],['e1_hyp',''],['e1_team',''],['e1_code',''],['e2_plans','03 Testing & Trials/2026-03-01_SAMPLE-01_Test-plan.pdf'],['e2_results','03 Testing & Trials/2026-10-15_SAMPLE-01_Field-trial-2-results.xlsx'],['e2_fail','03 Testing & Trials/2026-06-20_SAMPLE-01_Extrusion-teardown.pdf'],['e3_log','05 Suppliers/SAMPLE-01_Supplier-Tech-Log.xlsx'],['e3_corr','05 Suppliers/2026-02-20_SAMPLE-01_Acme-email-no-test-data-above-120C.pdf'],['e2_design','02 Design/2026-04-02_SAMPLE-01_Groove-rev-B.pdf'],['e2_field','04 Field Records/2026-10-14_SAMPLE-01_Trial-2-field-ticket.pdf'],['e4_ts','06 Financial/SAMPLE-01_Timesheets.xlsx'],['e4_emp','06 Financial/SAMPLE-01_Employee-list.xlsx'],['e5_inv','06 Financial/SAMPLE-01_Material-invoices.pdf'],['e6_con','06 Financial/2026-06-25_SAMPLE-01_Lab-invoice.pdf'],['e6_al',''],['e6_ip',''],['e7_cust','06 Financial/SAMPLE-01_Customer-trial-agreement.pdf']].forEach(([id,l])=>{p.ev[id]={d:true,l}});
+ p.suppliers=[{...T.suppliers(),date:fy+'-02-12',supplier:'Acme Elastomers',contact:'J. Smith, Tech Sales',product:'HNBR-X seal compound',isnew:'Yes',limits:'Rated to 120°C, 25 MPa (data sheet rev C)',use:'Downhole seal on cut-and-cap tool at 150°C, 35 MPa',beyond:'Yes',gap:'Whether the compound holds a seal above rated temperature and pressure; required new groove geometry and a backup ring',corr:'2026-02-20_SAMPLE-01_Acme-email-no-test-data-above-120C.pdf',dev:'No',ipOwner:'N/A',early:'No',notes:'Supplier confirmed no test data above 120°C'}];
+ p.checkins=[
+  {...T.checkins(),month:fy+'-03',by:'Sam Lee',lead:'Alex Morgan',date:fy+'-03-30',tried:'Built shop test cell and ran baseline seal at 120°C and 25 MPa.',happened:'Baseline sealed at 25 MPa, matching the data sheet. Data in 03 Testing & Trials.',failed:'None at rated limits.',supplier:'Not yet beyond spec.',next:'Step to 140°C and 35 MPa to find the failure mode.',newcost:'Test cell materials $2,100.',customer:'None.'},
+  {...T.checkins(),month:fy+'-06',by:'Sam Lee',lead:'Alex Morgan',date:fy+'-06-28',tried:'Pressure-cycled the seal at 140°C and 35 MPa.',happened:'Leaked at cycle 6. Teardown showed extrusion into the gland gap.',failed:'Unexpected: damage was extrusion, not thermal degradation of the compound.',supplier:'HNBR-X used at 140°C and 35 MPa, beyond rated 120°C and 25 MPa.',next:'Add a PEEK backup ring and retest.',newcost:'Testing lab engaged, $15,000.',customer:'None.'},
+  {...T.checkins(),month:fy+'-10',by:'Sam Lee',lead:'Alex Morgan',date:fy+'-10-30',tried:'Field trial 2 with revised groove geometry and backup ring at 150°C and 35 MPa.',happened:'Held 35 MPa for 10 cycles. Logged pressure and temperature; photos saved.',failed:'Trial 1 leak path traced to oversized groove clearance.',supplier:'HNBR-X at 150°C and 35 MPa, beyond rated limits.',next:'Confirm repeatability and document the final geometry.',newcost:'None.',customer:'Field trial 2 on a customer well during a paying job; 6 crew hours.'}];
+ p.costs={l300:'62000',l320:'8400',l340:'15000',gl:'85400'}; p.prov={AB:'70',BC:'',SK:'30',other:''};
+ p.t661.l206='Mechanical engineering'; p.t661.l208='First claim for this project'; p.t661.prepBy='External consultant (ITA)';
+ p.t661.l242=gen242(p); p.t661.l244=gen244(p); p.t661.l246=gen246(p);
+ return p;
+}
+
+/* ====================================================================
    LIVE REGIONS
    ==================================================================== */
 const LIVE={deadlines:()=>LIVE_deadlines(),syscount:()=>LIVE_syscount(),evcount:()=>LIVE_evcount(),suppsum:()=>LIVE_suppsum(),costs:()=>LIVE_costs(),provsum:()=>LIVE_provsum(),flags:()=>LIVE_flags(),secC:()=>LIVE_secC(),ready:()=>LIVE_ready(),provtable:()=>LIVE_provtable()};
@@ -1055,10 +1248,10 @@ function refreshLive(){
    ==================================================================== */
 function renderNav(){
  let h='',lastG=null;
- STEPS.forEach((s,i)=>{
+ ALLSTEPS.forEach((s,i)=>{
   if(s.g&&s.g!==lastG){h+=`<div class="grp">${s.g}</div>`;lastG=s.g;}
   const v=stepPct(s.id); const pct=v==null?'':Math.round(v*100);
-  h+=`<button class="${s.id===STEP?'on':''}" data-act="go" data-to="${s.id}"><span class="n">${i+1}</span>${s.t}<span class="p ${pct===100?'done':''}">${pct===''?'':pct===100?'✓':pct+'%'}</span></button>`;
+  h+=`<button class="${s.id===STEP?'on':''}" data-act="go" data-to="${s.id}"><span class="n">${s.help?'?':i+1}</span>${s.t}<span class="p ${pct===100?'done':''}">${pct===''?'':pct===100?'✓':pct+'%'}</span></button>`;
  });
  const nav=document.getElementById('nav'); const sc=nav.scrollTop; nav.innerHTML=h; nav.scrollTop=sc;
 }
@@ -1066,6 +1259,7 @@ function render(keepScroll){
  const y=window.scrollY;
  if(S.projects.length&&CUR>=S.projects.length) CUR=S.projects.length-1;
  document.getElementById('main').innerHTML=V[STEP]();
+ { const hp=helpPanel(STEP); if(hp){ const m=document.getElementById('main'); const anchor=m.querySelector('.lead')||m.querySelector('h1'); if(anchor) anchor.insertAdjacentHTML('afterend',hp); } }
  document.getElementById('fileName').value=S.name||'';
  refreshLive();
  bindNaming();
@@ -1194,7 +1388,7 @@ document.getElementById('fileName').addEventListener('input',e=>{ S.name=e.targe
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-act]'); if(!b||b.tagName==='SELECT') return;
  const a=b.dataset.act;
- if(a==='go'){ e.preventDefault(); const s=STEPS.find(x=>x.id===b.dataset.to); STEP=s.id; render(); persistSoon(); }
+ if(a==='go'){ e.preventDefault(); const s=ALLSTEPS.find(x=>x.id===b.dataset.to); STEP=s.id; render(); persistSoon(); }
  else if(a==='save'){ if(!S.name.trim()){ const n=prompt('Name this claim file (e.g. Acme Energy FY2026):',S.company.name?S.company.name+' '+(S.company.fye||'').slice(0,4):''); if(!n) return; S.name=n.trim(); document.getElementById('fileName').value=S.name; } persist(); toast('Saved as “'+S.name+'”'); }
  else if(a==='open') openDialog();
  else if(a==='closemodal') closeModal();
@@ -1205,6 +1399,7 @@ document.addEventListener('click',e=>{
  else if(a==='add'){ const arr=getp(b.dataset.path); arr.push(T[b.dataset.tpl]()); touch(); render(true); }
  else if(a==='del'){ const arr=getp(b.dataset.path); if(!confirm('Remove this entry?')) return; arr.splice(+b.dataset.i,1); touch(); render(true); }
  else if(a==='addproj'){ S.projects.push(newProject()); CUR=S.projects.length-1; touch(); render(true); }
+ else if(a==='sample'){ if(S.projects.some(x=>x.sample)&&!confirm('A sample project is already loaded. Load another copy?')) return; S.projects.push(buildSample()); CUR=S.projects.length-1; STEP='project'; touch(); render(); toast('Sample project loaded. Explore each step; delete it from the project bar when done.'); }
  else if(a==='resetproj'){ const p=P(); if(!confirm('Reset project '+p.code+(p.name?' ('+p.name+')':'')+'?\n\nThis clears everything entered for this project: setup answers, evidence ticks, supplier log, check-ins, costs and T661 text. Its code is kept. Company details and other projects are not affected.\n\nYou can undo straight afterwards with \u201cUndo reset\u201d.')) return; UNDO=JSON.parse(JSON.stringify(p)); const fresh=newProject(); fresh.id=p.id; fresh.code=p.code; fresh.fy=p.fy; S.projects[CUR]=fresh; touch(); render(true); toast('Project reset. Use \u201cUndo reset\u201d if that was a mistake.'); }
  else if(a==='undoreset'){ if(UNDO){ S.projects[CUR]=UNDO; UNDO=null; touch(); render(true); toast('Reset undone.'); } }
  else if(a==='delproj'){ if(!confirm('Delete project '+P().code+' and everything recorded for it?')) return; S.projects.splice(CUR,1); CUR=0; touch(); render(true); }
